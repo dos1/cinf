@@ -161,6 +161,7 @@ void Gamestate_ProcessEvent(struct Game *game, struct dosowiskoResources* data, 
 	TM_HandleEvent(data->timeline, ev);
 	if ((ev->type==ALLEGRO_EVENT_KEY_DOWN) && (ev->keyboard.keycode == ALLEGRO_KEY_ESCAPE)) {
 		SwitchGamestate(game, "dosowisko", "walk");
+		UnloadGamestate(game, "slavic");
 		LoadGamestate(game, "fall");
 	}
 }

@@ -22,72 +22,66 @@
 #include <libsuperderpy.h>
 #include <math.h>
 #include <allegro5/allegro_primitives.h>
-#include "fall.h"
+#include "notfine.h"
 
 int Gamestate_ProgressCount = 2; // number of loading steps as reported by Gamestate_Load
 
-void Gamestate_Logic(struct Game *game, struct FallResources* data) {
+void Gamestate_Logic(struct Game *game, struct NotFineResources* data) {
 	// Called 60 times per second. Here you should do all your game logic.
-	AnimateCharacter(game, data->maks, 1);
-
-	if (!data->maks->successor) {
-		SwitchGamestate(game, "fall", "catch");
-	}
 }
 
-void Gamestate_Draw(struct Game *game, struct FallResources* data) {
+void Gamestate_Draw(struct Game *game, struct NotFineResources* data) {
 	// Called as soon as possible, but no sooner than next Gamestate_Logic call.
 	// Draw everything to the screen here.
 
 	al_set_target_backbuffer(game->display);
-	DrawCharacter(game, data->maks, al_map_rgb(255,255,255), 0);
+	al_draw_bitmap(data->bitmap, 0, 0, 0);
+
+	DrawTextWithShadow(data->font, al_map_rgb(255,255,255), 320/2, 160, ALLEGRO_ALIGN_CENTER, "Computer is not fine! :(");
 }
 
-void Gamestate_ProcessEvent(struct Game *game, struct FallResources* data, ALLEGRO_EVENT *ev) {
+void Gamestate_ProcessEvent(struct Game *game, struct NotFineResources* data, ALLEGRO_EVENT *ev) {
 	// Called for each event in Allegro event queue.
 	// Here you can handle user input, expiring timers etc.
 	if ((ev->type==ALLEGRO_EVENT_KEY_DOWN) && (ev->keyboard.keycode == ALLEGRO_KEY_ESCAPE)) {
-		UnloadGamestate(game, "fall"); // mark this gamestate to be stopped and unloaded
-		UnloadGamestate(game, "catch");
-		// When there are no active gamestates, the engine will quit.
+		LoadGamestate(game, "walk");
+		LoadGamestate(game, "fall");
+		LoadGamestate(game, "catch");
+		StopGamestate(game, "notfine");
+		StartGamestate(game, "walk");
 	}
 }
 
 void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	// Called once, when the gamestate library is being loaded.
 	// Good place for allocating memory, loading bitmaps etc.
-	struct FallResources *data = malloc(sizeof(struct FallResources));
+	struct NotFineResources *data = malloc(sizeof(struct NotFineResources));
 	data->font = al_create_builtin_font();
 	progress(game); // report that we progressed with the loading, so the engine can draw a progress bar
-	data->maks = CreateCharacter(game, "fall");
-	RegisterSpritesheet(game, data->maks, "fall");
-	RegisterSpritesheet(game, data->maks, "blank");
-	LoadSpritesheets(game, data->maks);
+	data->bitmap = al_load_bitmap(GetDataFilePath(game, "notfine.png"));
 	progress(game);
 
 	return data;
 }
 
-void Gamestate_Unload(struct Game *game, struct FallResources* data) {
+void Gamestate_Unload(struct Game *game, struct NotFineResources* data) {
 	// Called when the gamestate library is being unloaded.
 	// Good place for freeing all allocated memory and resources.
 	al_destroy_font(data->font);
 	free(data);
 }
 
-void Gamestate_Start(struct Game *game, struct FallResources* data) {
+void Gamestate_Start(struct Game *game, struct NotFineResources* data) {
 	// Called when this gamestate gets control. Good place for initializing state,
 	// playing music etc.
-	SelectSpritesheet(game, data->maks, "fall");
-	SetCharacterPosition(game, data->maks, 0, 0, 0);
 }
 
-void Gamestate_Stop(struct Game *game, struct FallResources* data) {
+void Gamestate_Stop(struct Game *game, struct NotFineResources* data) {
 	// Called when gamestate gets stopped. Stop timers, music etc. here.
 }
 
 // Ignore those for now.
 // TODO: Check, comment, refine and/or remove:
-void Gamestate_Reload(struct Game *game, struct FallResources* data) {}
-void Gamestate_Pause(struct Game *game, struct FallResources* data) {}
-void Gamestate_Resume(struct Game *game, struct FallResources* data) {}
+void Gamestate_Reload(struct Game *game, struct NotFineResources* data) {}
+void Gamestate_Pause(struct Game *game, struct NotFineResources* data) {}
+void Gamestate_Resume(struct Game *game, struct NotFineResources* data) {}

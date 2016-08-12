@@ -24,6 +24,8 @@
 #include <allegro5/allegro_primitives.h>
 #include "walk.h"
 
+const int MAKS = 64-16;
+
 int Gamestate_ProgressCount = 67; // number of loading steps as reported by Gamestate_Load
 
 bool Move(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
@@ -77,8 +79,42 @@ bool ShowMaks(struct Game *game, struct TM_Action *action, enum TM_ActionState s
 	struct WalkResources *data = action->arguments->value;
 	if (state == TM_ACTIONSTATE_RUNNING) {
 		SetCharacterPosition(game, data->maks, 12, 80, 0);
+		SetCharacterPosition(game, data->people[MAKS], -100, -100, 0);
 	}
 	return true;
+}
+
+bool PrepMaks(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
+	struct WalkResources *data = action->arguments->value;
+	if (state == TM_ACTIONSTATE_START) {
+		SelectSpritesheet(game, data->people[MAKS], "maks-prep");
+		MoveCharacter(game, data->people[MAKS], -2, -5, 0);
+	}
+	return true;
+}
+
+bool MovePrepingMaks(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
+	struct WalkResources *data = action->arguments->value;
+	if (state == TM_ACTIONSTATE_INIT) {
+		action->arguments = TM_AddToArgs(action->arguments, 1, malloc(sizeof(int)));
+		*((int*)action->arguments->next->value) = 0;
+//		SetCharacterPosition(game, data->maks, 12, 80, 0);
+	}
+	if (state == TM_ACTIONSTATE_RUNNING) {
+		(*((int*)action->arguments->next->value))++;
+		if (*((int*)action->arguments->next->value) == 10) {
+			*((int*)action->arguments->next->value) = 0;
+			MoveCharacter(game, data->people[MAKS], -3, 0, 0);
+
+			if (data->people[MAKS]->x <= 5) {
+				return true;
+			}
+		}
+	}
+	if (state == TM_ACTIONSTATE_DESTROY) {
+		free(action->arguments->next->value);
+	}
+	return false;
 }
 
 
@@ -113,7 +149,6 @@ void Gamestate_Draw(struct Game *game, struct WalkResources* data) {
 
 	while (y < 180) {
 		for (int j=0; j<8; j++) {
-			SetCharacterPosition(game, data->people[i*8+j], x+40*j + 9 - *((int*)data->people[i*8+j]->data) + 2, y-18, 0);
 			DrawCharacter(game, data->people[i*8+j], al_map_rgb(255,255,255), 0);
 		}
 
@@ -142,6 +177,9 @@ void Gamestate_Draw(struct Game *game, struct WalkResources* data) {
 	                         25 - 7 - 1,
 	                         al_map_rgb(255,0,0));
 
+	DrawCharacter(game, data->leftkey, al_map_rgb(255,255,255), 0);
+	DrawCharacter(game, data->rightkey, al_map_rgb(255,255,255), 0);
+
 	al_set_target_bitmap(data->pixelator);
 	al_draw_bitmap(data->m, 0, data->meteroffset, 0);
 
@@ -158,15 +196,22 @@ void Gamestate_ProcessEvent(struct Game *game, struct WalkResources* data, ALLEG
 		// When there are no active gamestates, the engine will quit.
 	}
 	if ((ev->type==ALLEGRO_EVENT_KEY_DOWN) && (ev->keyboard.keycode == ALLEGRO_KEY_LEFT)) {
+		SelectSpritesheet(game, data->leftkey, "pressed");
 		data->skew -= 0.1;
 		if (data->skew < -1) data->skew = -1;
 	}
 	if ((ev->type==ALLEGRO_EVENT_KEY_DOWN) && (ev->keyboard.keycode == ALLEGRO_KEY_RIGHT)) {
+		SelectSpritesheet(game, data->rightkey, "pressed");
 		data->skew += 0.1;
 		if (data->skew > 1) data->skew = 1;
 	}
+	if ((ev->type==ALLEGRO_EVENT_KEY_UP) && (ev->keyboard.keycode == ALLEGRO_KEY_LEFT)) {
+		SelectSpritesheet(game, data->leftkey, "ready");
+	}
+	if ((ev->type==ALLEGRO_EVENT_KEY_UP) && (ev->keyboard.keycode == ALLEGRO_KEY_RIGHT)) {
+		SelectSpritesheet(game, data->rightkey, "ready");
+	}
 }
-
 void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	// Called once, when the gamestate library is being loaded.
 	// Good place for allocating memory, loading bitmaps etc.
@@ -180,6 +225,7 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 
 	data->person = CreateCharacter(game, "person");
 	RegisterSpritesheet(game, data->person, "dos");
+	RegisterSpritesheet(game, data->person, "maks-prep");
 	LoadSpritesheets(game, data->person);
 	progress(game);
 
@@ -200,6 +246,30 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	data->m = al_create_bitmap(320, 180);
 	data->pixelator = al_create_bitmap(320, 180);
 
+	data->leftkey = CreateCharacter(game, "key");
+	RegisterSpritesheet(game, data->leftkey, "ready");
+	RegisterSpritesheet(game, data->leftkey, "pressed");
+	LoadSpritesheets(game, data->leftkey);
+
+	al_set_target_bitmap(data->leftkey->spritesheets->bitmap);
+	al_draw_text(data->font, al_map_rgb(0,0,0), 18, 15, ALLEGRO_ALIGN_LEFT, "<");
+	al_draw_text(data->font, al_map_rgb(0,0,0), 19, 15, ALLEGRO_ALIGN_LEFT, "-");
+	al_set_target_bitmap(data->leftkey->spritesheets->next->bitmap);
+	al_draw_text(data->font, al_map_rgb(0,0,0), 16, 13, ALLEGRO_ALIGN_LEFT, "<");
+	al_draw_text(data->font, al_map_rgb(0,0,0), 17, 13, ALLEGRO_ALIGN_LEFT, "-");
+
+	data->rightkey = CreateCharacter(game, "key");
+	RegisterSpritesheet(game, data->rightkey, "ready");
+	RegisterSpritesheet(game, data->rightkey, "pressed");
+	LoadSpritesheets(game, data->rightkey);
+
+	al_set_target_bitmap(data->rightkey->spritesheets->bitmap);
+	al_draw_text(data->font, al_map_rgb(0,0,0), 21, 15, ALLEGRO_ALIGN_LEFT, ">");
+	al_draw_text(data->font, al_map_rgb(0,0,0), 18, 15, ALLEGRO_ALIGN_LEFT, "-");
+	al_set_target_bitmap(data->rightkey->spritesheets->next->bitmap);
+	al_draw_text(data->font, al_map_rgb(0,0,0), 19, 13, ALLEGRO_ALIGN_LEFT, ">");
+	al_draw_text(data->font, al_map_rgb(0,0,0), 16, 13, ALLEGRO_ALIGN_LEFT, "-");
+
 	data->timeline = TM_Init(game, "timeline");
 	return data;
 }
@@ -216,18 +286,40 @@ void Gamestate_Start(struct Game *game, struct WalkResources* data) {
 	// playing music etc.
 	SelectSpritesheet(game, data->maks, "walk");
 	SetCharacterPosition(game, data->maks, -120, 80, 0);
+	SetCharacterPosition(game, data->leftkey, 9, 28, 0);
+	SetCharacterPosition(game, data->rightkey, 320-2-48, 28, 0);
+	SelectSpritesheet(game, data->leftkey, "ready");
+	SelectSpritesheet(game, data->rightkey, "ready");
 	data->offset = 0;
 	data->skew = 0;
 	data->level = 0.00001;
 	data->points = 0;
 	data->zoom = 1;
-	data->meteroffset = -25;
-	TM_AddDelay(data->timeline, 1000);
-	TM_AddQueuedBackgroundAction(data->timeline, ShowMeter, TM_AddToArgs(NULL, 1, data), 1000, "showmeter");
-	TM_AddAction(data->timeline, ZoomOut, TM_AddToArgs(NULL, 1, data), "zoom");
+	data->meteroffset = -100;
+	TM_AddDelay(data->timeline, 2000);
+	TM_AddQueuedBackgroundAction(data->timeline, ShowMeter, TM_AddToArgs(NULL, 1, data), 2000, "showmeter");
+	TM_AddQueuedBackgroundAction(data->timeline, ZoomOut, TM_AddToArgs(NULL, 1, data), 1000, "zoom");
+	TM_AddAction(data->timeline, PrepMaks, TM_AddToArgs(NULL, 1, data), "prepmaks");
+	TM_AddDelay(data->timeline, 500);
+	TM_AddAction(data->timeline, MovePrepingMaks, TM_AddToArgs(NULL, 1, data), "moveprepingmaks");
 	TM_AddQueuedBackgroundAction(data->timeline, ShowMaks, TM_AddToArgs(NULL, 1, data), 0, "showmaks");
 	TM_AddQueuedBackgroundAction(data->timeline, Move, TM_AddToArgs(NULL, 1, data), 0, "move");
 	TM_AddQueuedBackgroundAction(data->timeline, Skew, TM_AddToArgs(NULL, 1, data), 0, "skew");
+
+	float spacing = 10, x = 117, y = 88;
+	int i = 0;
+
+	while (y < 180) {
+		for (int j=0; j<8; j++) {
+			SetCharacterPosition(game, data->people[i*8+j], x+40*j + 9 - *((int*)data->people[i*8+j]->data) + 2, y-18, 0);
+		}
+
+		x -= spacing;
+		y += spacing;
+		spacing += 0.5;
+
+		i++;
+	}
 }
 
 void Gamestate_Stop(struct Game *game, struct WalkResources* data) {

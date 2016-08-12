@@ -1,4 +1,4 @@
-/*! \file walk.h
+/*! \file fall.h
  *  \brief Walking gamestate.
  */
 /*
@@ -19,14 +19,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-struct WalkResources {
+struct FineResources {
 		// This struct is for every resource allocated and used by your gamestate.
 		// It gets created on load and then gets passed around to all other function calls.
 		ALLEGRO_FONT *font;
-		struct Character *maks, *people[64], *person, *leftkey, *rightkey;
-		ALLEGRO_BITMAP *bg, *sits, *area, *meter, *marker, *pixelator, *m;
-		float offset, skew, level;
-		struct Timeline *timeline;
-		int points, meteroffset;
-		float zoom;
+		ALLEGRO_BITMAP *bitmap;
 };
