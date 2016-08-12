@@ -1,0 +1,3 @@
+[submodule "libsuperderpy"]
+	path = libsuperderpy
+	url = https://github.com/dos1/libsuperderpy.git

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Computer Is (Not) Fine
+Exec=cinf
+Comment=Ensure that the computer is fine.
+Icon=cinf
+Terminal=false
+Categories=Game;ArcadeGame;

@@ -1,0 +1,5 @@
+register_gamestate("loading")
+register_gamestate("dosowisko")
+register_gamestate("slavic")
+register_gamestate("walk")
+register_gamestate("fall")
