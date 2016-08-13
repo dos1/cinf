@@ -1,6 +1,7 @@
 register_gamestate("loading")
 register_gamestate("dosowisko")
 register_gamestate("slavic")
+register_gamestate("intro")
 register_gamestate("walk")
 register_gamestate("fall")
 register_gamestate("catch")

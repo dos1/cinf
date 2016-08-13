@@ -32,8 +32,12 @@ int Gamestate_ProgressCount = 1;
 
 bool End(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
 	if (state == TM_ACTIONSTATE_RUNNING) {
-		SwitchGamestate(game, "slavic", "walk");
+		SwitchGamestate(game, "slavic", "intro");
+		LoadGamestate(game, "walk");
 		LoadGamestate(game, "fall");
+		LoadGamestate(game, "catch");
+		LoadGamestate(game, "fine");
+		LoadGamestate(game, "notfine");
 	}
 	return true;
 }
@@ -58,8 +62,12 @@ void Gamestate_Start(struct Game *game, struct SlavicResources* data) {
 void Gamestate_ProcessEvent(struct Game *game, struct SlavicResources* data, ALLEGRO_EVENT *ev) {
 	TM_HandleEvent(data->timeline, ev);
 	if ((ev->type==ALLEGRO_EVENT_KEY_DOWN) && (ev->keyboard.keycode == ALLEGRO_KEY_ESCAPE)) {
-		SwitchGamestate(game, "slavic", "walk");
+		SwitchGamestate(game, "slavic", "intro");
+		LoadGamestate(game, "walk");
 		LoadGamestate(game, "fall");
+		LoadGamestate(game, "catch");
+		LoadGamestate(game, "fine");
+		LoadGamestate(game, "notfine");
 	}
 }
 
