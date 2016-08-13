@@ -78,7 +78,8 @@ void Gamestate_ProcessEvent(struct Game *game, struct CatchResources* data, ALLE
 	}
 	if (ev->type==ALLEGRO_EVENT_KEY_DOWN) {
 		const char* keyname = al_keycode_to_name(ev->keyboard.keycode);
-		if (keyname[0] == data->ch) {
+		PrintConsole(game, "Pressed: %s", keyname);
+		if ((keyname[0] == data->ch) || (keyname[0] == data->ch + 'A' - 'a')) {
 			al_stop_sample_instance(game->data->button);
 			al_play_sample_instance(game->data->button);
 			MoveCharacter(game, data->hand, 9, 0, 0);
