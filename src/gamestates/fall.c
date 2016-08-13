@@ -47,8 +47,7 @@ void Gamestate_ProcessEvent(struct Game *game, struct FallResources* data, ALLEG
 	// Called for each event in Allegro event queue.
 	// Here you can handle user input, expiring timers etc.
 	if ((ev->type==ALLEGRO_EVENT_KEY_DOWN) && (ev->keyboard.keycode == ALLEGRO_KEY_ESCAPE)) {
-		UnloadGamestate(game, "fall"); // mark this gamestate to be stopped and unloaded
-		UnloadGamestate(game, "catch");
+		SwitchGamestate(game, "fall", "logo");
 		// When there are no active gamestates, the engine will quit.
 	}
 }
@@ -65,6 +64,10 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	LoadSpritesheets(game, data->maks);
 	progress(game);
 
+	data->sample = al_load_sample(GetDataFilePath(game, "fall.flac"));
+	data->sound = al_create_sample_instance(data->sample);
+	al_attach_sample_instance_to_mixer(data->sound, game->audio.fx);
+
 	return data;
 }
 
@@ -80,10 +83,12 @@ void Gamestate_Start(struct Game *game, struct FallResources* data) {
 	// playing music etc.
 	SelectSpritesheet(game, data->maks, "fall");
 	SetCharacterPosition(game, data->maks, 0, 0, 0);
+	al_play_sample_instance(data->sound);
 }
 
 void Gamestate_Stop(struct Game *game, struct FallResources* data) {
 	// Called when gamestate gets stopped. Stop timers, music etc. here.
+	al_stop_sample_instance(data->sound);
 }
 
 // Ignore those for now.

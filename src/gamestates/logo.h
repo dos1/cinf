@@ -19,12 +19,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-struct FineResources {
+struct LogoResources {
 		// This struct is for every resource allocated and used by your gamestate.
 		// It gets created on load and then gets passed around to all other function calls.
 		ALLEGRO_FONT *font;
-		ALLEGRO_BITMAP *bitmap;
-		ALLEGRO_AUDIO_STREAM *fine;
-		ALLEGRO_SAMPLE *sample;
-		ALLEGRO_SAMPLE_INSTANCE *end;
+		ALLEGRO_BITMAP *bitmap, *bg;
+		float pos;
 };

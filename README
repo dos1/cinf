@@ -1,0 +1,4 @@
+Computer Is (Not) Fine
+========
+
+mkdir build; cd build; cmake ..; make; cd ..; build/src/cinf

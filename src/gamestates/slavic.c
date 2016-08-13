@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "../common.h"
 #include <allegro5/allegro_ttf.h>
 #include <allegro5/allegro_primitives.h>
 #include <math.h>
@@ -32,12 +33,8 @@ int Gamestate_ProgressCount = 1;
 
 bool End(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
 	if (state == TM_ACTIONSTATE_RUNNING) {
-		SwitchGamestate(game, "slavic", "intro");
-		LoadGamestate(game, "walk");
-		LoadGamestate(game, "fall");
-		LoadGamestate(game, "catch");
-		LoadGamestate(game, "fine");
-		LoadGamestate(game, "notfine");
+		UnloadGamestate(game, "slavic");
+		StartGame(game, false);
 	}
 	return true;
 }
@@ -56,18 +53,14 @@ void Gamestate_Draw(struct Game *game, struct SlavicResources* data) {
 void Gamestate_Start(struct Game *game, struct SlavicResources* data) {
 	TM_AddDelay(data->timeline, 3000);
 	TM_AddAction(data->timeline, End, NULL, "end");
-//	al_play_sample_instance(data->sound);
+	al_play_sample_instance(data->sound);
 }
 
 void Gamestate_ProcessEvent(struct Game *game, struct SlavicResources* data, ALLEGRO_EVENT *ev) {
 	TM_HandleEvent(data->timeline, ev);
 	if ((ev->type==ALLEGRO_EVENT_KEY_DOWN) && (ev->keyboard.keycode == ALLEGRO_KEY_ESCAPE)) {
-		SwitchGamestate(game, "slavic", "intro");
-		LoadGamestate(game, "walk");
-		LoadGamestate(game, "fall");
-		LoadGamestate(game, "catch");
-		LoadGamestate(game, "fine");
-		LoadGamestate(game, "notfine");
+		UnloadGamestate(game, "slavic");
+		StartGame(game, false);
 	}
 }
 
@@ -76,6 +69,10 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	data->timeline = TM_Init(game, "main");
 	data->slavic = al_load_bitmap(GetDataFilePath(game, "slavic.png"));
 	(*progress)(game);
+
+	data->sample = al_load_sample(GetDataFilePath(game, "slavic.flac"));
+	data->sound = al_create_sample_instance(data->sample);
+	al_attach_sample_instance_to_mixer(data->sound, game->audio.music);
 
 	return data;
 }

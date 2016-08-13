@@ -25,4 +25,6 @@ struct IntroResources {
 		ALLEGRO_FONT *font;
 		ALLEGRO_BITMAP *bitmap;
 		struct Timeline *timeline;
+		ALLEGRO_SAMPLE *sample;
+		ALLEGRO_SAMPLE_INSTANCE *andnow;
 };

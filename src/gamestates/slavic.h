@@ -22,4 +22,6 @@
 struct SlavicResources {
 		ALLEGRO_BITMAP *slavic;
 		struct Timeline *timeline;
+		ALLEGRO_SAMPLE *sample;
+		ALLEGRO_SAMPLE_INSTANCE *sound;
 };

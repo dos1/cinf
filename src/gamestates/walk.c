@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "../common.h"
 #include <libsuperderpy.h>
 #include <math.h>
 #include <allegro5/allegro_primitives.h>
@@ -38,6 +39,9 @@ bool Move(struct Game *game, struct TM_Action *action, enum TM_ActionState state
 
 bool Skew(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
 	struct WalkResources *data = action->arguments->value;
+	if (state == TM_ACTIONSTATE_START) {
+		data->started = true;
+	}
 	if (state == TM_ACTIONSTATE_RUNNING) {
 		if (data->skew < 0) {
 			data->skew -= data->level;
@@ -45,7 +49,7 @@ bool Skew(struct Game *game, struct TM_Action *action, enum TM_ActionState state
 			data->skew += data->level;
 		}
 		data->level += 0.000015;
-		data->points++;
+		game->data->score++;
 	}
 	return false;
 }
@@ -121,6 +125,7 @@ bool MovePrepingMaks(struct Game *game, struct TM_Action *action, enum TM_Action
 void Gamestate_Logic(struct Game *game, struct WalkResources* data) {
 	// Called 60 times per second. Here you should do all your game logic.
 	AnimateCharacter(game, data->maks, 1);
+	AnimateCharacter(game, data->person, 1);
 	TM_Process(data->timeline);
 
 	if (fabs(data->skew) >= 1) {
@@ -146,6 +151,7 @@ void Gamestate_Draw(struct Game *game, struct WalkResources* data) {
 
 	al_set_target_bitmap(data->area);
 	al_clear_to_color(al_map_rgba(0,0,0,0));
+	DrawCharacter(game, data->person, al_map_rgb(255,255,255), 0);
 
 	float spacing = 10, x = 117, y = 88;
 	int i = 0;
@@ -194,18 +200,23 @@ void Gamestate_ProcessEvent(struct Game *game, struct WalkResources* data, ALLEG
 	// Here you can handle user input, expiring timers etc.
 	TM_HandleEvent(data->timeline, ev);
 	if ((ev->type==ALLEGRO_EVENT_KEY_DOWN) && (ev->keyboard.keycode == ALLEGRO_KEY_ESCAPE)) {
-		UnloadGamestate(game, "walk"); // mark this gamestate to be stopped and unloaded
+		SwitchGamestate(game, "walk", "logo"); // mark this gamestate to be stopped and unloaded
 		// When there are no active gamestates, the engine will quit.
 	}
+	if (!data->started) return;
 	if ((ev->type==ALLEGRO_EVENT_KEY_DOWN) && (ev->keyboard.keycode == ALLEGRO_KEY_LEFT)) {
 		SelectSpritesheet(game, data->leftkey, "pressed");
 		data->skew -= 0.1;
 		if (data->skew < -1) data->skew = -1;
+		al_stop_sample_instance(game->data->button);
+		al_play_sample_instance(game->data->button);
 	}
 	if ((ev->type==ALLEGRO_EVENT_KEY_DOWN) && (ev->keyboard.keycode == ALLEGRO_KEY_RIGHT)) {
 		SelectSpritesheet(game, data->rightkey, "pressed");
 		data->skew += 0.1;
 		if (data->skew > 1) data->skew = 1;
+		al_stop_sample_instance(game->data->button);
+		al_play_sample_instance(game->data->button);
 	}
 	if ((ev->type==ALLEGRO_EVENT_KEY_UP) && (ev->keyboard.keycode == ALLEGRO_KEY_LEFT)) {
 		SelectSpritesheet(game, data->leftkey, "ready");
@@ -226,17 +237,17 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	progress(game);
 
 	data->person = CreateCharacter(game, "person");
-	char* sprites[] = { "dorota", "dos", "green", "jagoda", "jukio", "maciej",
+	char* sprites[] = { "dorota", "dos", "green", "jagoda", "jukio", "maciej", "dalton",
 	                    "random1", "random2", "random3",
-	                    "random1", "random2", "random3",
-	                    "random1", "random2", "random3",
-	                    "random1", "random2", "random3",
-	                    "raxter", "shark", "sos", "threef", "tyr", "vera"};
+	                    "random4", "random5", "random6",
+	                    "random8", "random7", "random9",
+	                    "raxter", "shark", "sos", "threef", "tyr", "vera", "szyszka"};
 	for (int i = 0; i < sizeof(sprites)/sizeof(sprites[0]); i++) {
 		RegisterSpritesheet(game, data->person, sprites[i]);
 	}
 	RegisterSpritesheet(game, data->person, "maks");
 	RegisterSpritesheet(game, data->person, "maks-prep");
+	RegisterSpritesheet(game, data->person, "kacpi");
 	LoadSpritesheets(game, data->person);
 	progress(game);
 
@@ -282,6 +293,10 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	al_draw_text(data->font, al_map_rgb(0,0,0), 19, 13, ALLEGRO_ALIGN_LEFT, ">");
 	al_draw_text(data->font, al_map_rgb(0,0,0), 16, 13, ALLEGRO_ALIGN_LEFT, "-");
 
+	data->sample = al_load_sample(GetDataFilePath(game, "chimpology.flac"));
+	data->chimpology = al_create_sample_instance(data->sample);
+	al_attach_sample_instance_to_mixer(data->chimpology, game->audio.voice);
+
 	data->timeline = TM_Init(game, "timeline");
 	return data;
 }
@@ -302,12 +317,16 @@ void Gamestate_Start(struct Game *game, struct WalkResources* data) {
 	SetCharacterPosition(game, data->rightkey, 320-2-48, 28, 0);
 	SelectSpritesheet(game, data->leftkey, "ready");
 	SelectSpritesheet(game, data->rightkey, "ready");
+	SelectSpritesheet(game, data->person, "kacpi");
+	SetCharacterPosition(game, data->person, 173, 3, 0);
 	data->offset = 0;
 	data->skew = 0;
 	data->level = 0.00001;
-	data->points = 0;
+	game->data->score = 0;
 	data->zoom = 1;
+	data->started = false;
 	data->meteroffset = -100;
+	al_play_sample_instance(data->chimpology);
 	TM_AddDelay(data->timeline, 2000);
 	TM_AddQueuedBackgroundAction(data->timeline, ShowMeter, TM_AddToArgs(NULL, 1, data), 2000, "showmeter");
 	TM_AddQueuedBackgroundAction(data->timeline, ZoomOut, TM_AddToArgs(NULL, 1, data), 1000, "zoom");
@@ -317,6 +336,8 @@ void Gamestate_Start(struct Game *game, struct WalkResources* data) {
 	TM_AddQueuedBackgroundAction(data->timeline, ShowMaks, TM_AddToArgs(NULL, 1, data), 0, "showmaks");
 	TM_AddQueuedBackgroundAction(data->timeline, Move, TM_AddToArgs(NULL, 1, data), 0, "move");
 	TM_AddQueuedBackgroundAction(data->timeline, Skew, TM_AddToArgs(NULL, 1, data), 0, "skew");
+
+	al_set_audio_stream_playing(game->data->music, true);
 
 	float spacing = 10, x = 117, y = 88;
 	int i = 0;
@@ -336,6 +357,11 @@ void Gamestate_Start(struct Game *game, struct WalkResources* data) {
 
 void Gamestate_Stop(struct Game *game, struct WalkResources* data) {
 	// Called when gamestate gets stopped. Stop timers, music etc. here.
+	game->data->score -= 366;
+	if (game->data->score < 0) {
+		game->data->score = 0;
+	}
+	al_stop_sample_instance(data->chimpology);
 }
 
 // Ignore those for now.

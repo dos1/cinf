@@ -24,4 +24,6 @@ struct NotFineResources {
 		// It gets created on load and then gets passed around to all other function calls.
 		ALLEGRO_FONT *font;
 		ALLEGRO_BITMAP *bitmap;
+		ALLEGRO_SAMPLE *sample;
+		ALLEGRO_SAMPLE_INSTANCE *boom;
 };

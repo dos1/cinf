@@ -27,4 +27,6 @@ struct CatchResources {
 		ALLEGRO_BITMAP *dell[6];
 		int pos;
 		char ch;
+		ALLEGRO_SAMPLE *sample;
+		ALLEGRO_SAMPLE_INSTANCE *sound;
 };

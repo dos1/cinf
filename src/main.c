@@ -1,5 +1,5 @@
 /*! \file main.c
- *  \brief Main file of Super Examples.
+ *  \brief Main file of Computer Is (Not) Fine.
  */
 /*
  * Copyright (c) Sebastian Krzyszkowiak <dos@dosowisko.net>
@@ -45,6 +45,8 @@ int main(int argc, char** argv) {
 	LoadGamestate(game, "dosowisko");
 	LoadGamestate(game, "slavic");
 	StartGamestate(game, "dosowisko");
+
+	game->data = calloc(1, sizeof(struct CommonResources));
 
 	libsuperderpy_run(game);
 

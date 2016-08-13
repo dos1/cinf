@@ -27,6 +27,9 @@ struct WalkResources {
 		ALLEGRO_BITMAP *bg, *sits, *area, *meter, *marker, *pixelator, *m;
 		float offset, skew, level;
 		struct Timeline *timeline;
-		int points, meteroffset;
+		int meteroffset;
 		float zoom;
+		bool started;
+		ALLEGRO_SAMPLE *sample;
+		ALLEGRO_SAMPLE_INSTANCE *chimpology;
 };

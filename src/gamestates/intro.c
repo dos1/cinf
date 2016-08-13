@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "../common.h"
 #include <libsuperderpy.h>
 #include <math.h>
 #include <allegro5/allegro_primitives.h>
@@ -27,8 +28,23 @@
 int Gamestate_ProgressCount = 2; // number of loading steps as reported by Gamestate_Load
 
 bool Switch(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
-	if (state == TM_ACTIONSTATE_RUNNING) {
+	if (state == TM_ACTIONSTATE_START) {
 		SwitchGamestate(game, "intro", "walk");
+	}
+	return true;
+}
+
+bool PlayMusic(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
+	if (state == TM_ACTIONSTATE_START) {
+		al_set_audio_stream_playing(game->data->music, true);
+	}
+	return true;
+}
+
+bool PlaySound(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
+	struct IntroResources *data = action->arguments->value;
+	if (state == TM_ACTIONSTATE_START) {
+		al_play_sample_instance(data->andnow);
 	}
 	return true;
 }
@@ -70,6 +86,23 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 
 	data->timeline = TM_Init(game, "timeline");
 
+	if (!game->data->music) {
+		game->data->music = al_load_audio_stream(GetDataFilePath(game, "music.flac"), 4, 1024);
+		al_attach_audio_stream_to_mixer(game->data->music, game->audio.music);
+		al_set_audio_stream_playmode(game->data->music, ALLEGRO_PLAYMODE_LOOP);
+		al_set_audio_stream_playing(game->data->music, false);
+	}
+
+	data->sample = al_load_sample(GetDataFilePath(game, "andnow.flac"));
+	data->andnow = al_create_sample_instance(data->sample);
+	al_attach_sample_instance_to_mixer(data->andnow, game->audio.voice);
+
+	if (!game->data->button) {
+		game->data->button_sample = al_load_sample(GetDataFilePath(game, "button.flac"));
+		game->data->button = al_create_sample_instance(game->data->button_sample);
+		al_attach_sample_instance_to_mixer(game->data->button, game->audio.fx);
+	}
+
 	return data;
 }
 
@@ -83,12 +116,21 @@ void Gamestate_Unload(struct Game *game, struct IntroResources* data) {
 void Gamestate_Start(struct Game *game, struct IntroResources* data) {
 	// Called when this gamestate gets control. Good place for initializing state,
 	// playing music etc.
-	TM_AddDelay(data->timeline, 3000);
+	TM_AddDelay(data->timeline, 1400);
+	TM_AddAction(data->timeline, PlayMusic, NULL, "playmusic");
+	TM_AddDelay(data->timeline, 1000);
+	TM_AddAction(data->timeline, PlaySound, TM_AddToArgs(NULL, 1, data), "playsound");
+	TM_AddDelay(data->timeline, 1600);
 	TM_AddAction(data->timeline, Switch, NULL, "switch");
+	if (al_get_audio_stream_playing(game->data->music)) {
+		al_set_audio_stream_playing(game->data->music, false);
+		al_rewind_audio_stream(game->data->music);
+	}
 }
 
 void Gamestate_Stop(struct Game *game, struct IntroResources* data) {
 	// Called when gamestate gets stopped. Stop timers, music etc. here.
+	al_stop_sample_instance(data->andnow);
 }
 
 // Ignore those for now.

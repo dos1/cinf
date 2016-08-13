@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "../common.h"
 #include <libsuperderpy.h>
 #include <math.h>
 #include <allegro5/allegro_primitives.h>
@@ -31,6 +32,10 @@ void Gamestate_Logic(struct Game *game, struct CatchResources* data) {
 	AnimateCharacter(game, data->bg, 1);
 	AnimateCharacter(game, data->glow, 1);
 	data->pos++;
+	if (data->pos % 64 == 0) {
+		al_stop_sample_instance(data->sound);
+		al_play_sample_instance(data->sound);
+	}
 	if (data->pos >= 288) {
 		data->pos = 287;
 		SwitchGamestate(game, "catch", "notfine");
@@ -68,12 +73,14 @@ void Gamestate_ProcessEvent(struct Game *game, struct CatchResources* data, ALLE
 	// Called for each event in Allegro event queue.
 	// Here you can handle user input, expiring timers etc.
 	if ((ev->type==ALLEGRO_EVENT_KEY_DOWN) && (ev->keyboard.keycode == ALLEGRO_KEY_ESCAPE)) {
-		UnloadGamestate(game, "catch"); // mark this gamestate to be stopped and unloaded
+		SwitchGamestate(game, "catch", "logo"); // mark this gamestate to be stopped and unloaded
 		// When there are no active gamestates, the engine will quit.
 	}
 	if (ev->type==ALLEGRO_EVENT_KEY_DOWN) {
 		const char* keyname = al_keycode_to_name(ev->keyboard.keycode);
 		if (keyname[0] == data->ch) {
+			al_stop_sample_instance(game->data->button);
+			al_play_sample_instance(game->data->button);
 			MoveCharacter(game, data->hand, 9, 0, 0);
 			if (data->hand->x > 0) {
 				SetCharacterPosition(game, data->hand, 0, 0, 0);
@@ -132,6 +139,10 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	data->dell[4] = al_load_bitmap(GetDataFilePath(game, "dell4.png"));
 	data->dell[5] = al_load_bitmap(GetDataFilePath(game, "dell5.png"));
 
+	data->sample = al_load_sample(GetDataFilePath(game, "bdzium.flac"));
+	data->sound = al_create_sample_instance(data->sample);
+	al_attach_sample_instance_to_mixer(data->sound, game->audio.fx);
+
 	return data;
 }
 
@@ -153,6 +164,7 @@ void Gamestate_Start(struct Game *game, struct CatchResources* data) {
 	SetCharacterPosition(game, data->glow, 0, 0, 0);
 	SelectSpritesheet(game, data->key, "ready");
 	SetCharacterPosition(game, data->key, 139, 136, 0);
+	al_play_sample_instance(data->sound);
 	data->pos = 0;
 }
 

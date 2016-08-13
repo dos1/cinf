@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "../common.h"
 #include <libsuperderpy.h>
 #include <math.h>
 #include <allegro5/allegro_primitives.h>
@@ -37,19 +38,12 @@ void Gamestate_Draw(struct Game *game, struct NotFineResources* data) {
 	al_set_target_backbuffer(game->display);
 	al_draw_bitmap(data->bitmap, 0, 0, 0);
 
-	DrawTextWithShadow(data->font, al_map_rgb(255,255,255), 320/2, 160, ALLEGRO_ALIGN_CENTER, "Computer is not fine! :(");
+	DrawTextWithShadow(data->font, al_map_rgb(255,255,255), 320/2, 140, ALLEGRO_ALIGN_CENTER, "Computer is not fine! :(");
 }
 
 void Gamestate_ProcessEvent(struct Game *game, struct NotFineResources* data, ALLEGRO_EVENT *ev) {
 	// Called for each event in Allegro event queue.
 	// Here you can handle user input, expiring timers etc.
-	if ((ev->type==ALLEGRO_EVENT_KEY_DOWN) && (ev->keyboard.keycode == ALLEGRO_KEY_ESCAPE)) {
-		LoadGamestate(game, "walk");
-		LoadGamestate(game, "fall");
-		LoadGamestate(game, "catch");
-		StopGamestate(game, "notfine");
-		StartGamestate(game, "walk");
-	}
 }
 
 void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
@@ -60,6 +54,12 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	progress(game); // report that we progressed with the loading, so the engine can draw a progress bar
 	data->bitmap = al_load_bitmap(GetDataFilePath(game, "notfine.png"));
 	progress(game);
+
+	data->sample = al_load_sample(GetDataFilePath(game, "boom.flac"));
+	data->boom = al_create_sample_instance(data->sample);
+	al_attach_sample_instance_to_mixer(data->boom, game->audio.fx);
+
+	LoadGamestate(game, "menu");
 
 	return data;
 }
@@ -74,10 +74,13 @@ void Gamestate_Unload(struct Game *game, struct NotFineResources* data) {
 void Gamestate_Start(struct Game *game, struct NotFineResources* data) {
 	// Called when this gamestate gets control. Good place for initializing state,
 	// playing music etc.
+	al_play_sample_instance(data->boom);
+	StartGamestate(game, "menu");
 }
 
 void Gamestate_Stop(struct Game *game, struct NotFineResources* data) {
 	// Called when gamestate gets stopped. Stop timers, music etc. here.
+	StopGamestate(game, "menu");
 }
 
 // Ignore those for now.
