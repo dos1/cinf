@@ -78,7 +78,7 @@ bool ShowMeter(struct Game *game, struct TM_Action *action, enum TM_ActionState 
 bool ShowMaks(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
 	struct WalkResources *data = action->arguments->value;
 	if (state == TM_ACTIONSTATE_RUNNING) {
-		SetCharacterPosition(game, data->maks, 12, 80, 0);
+		SetCharacterPosition(game, data->maks, 16, 82, 0);
 		SetCharacterPosition(game, data->people[MAKS], -100, -100, 0);
 	}
 	return true;
@@ -139,10 +139,13 @@ void Gamestate_Draw(struct Game *game, struct WalkResources* data) {
 	// Called as soon as possible, but no sooner than next Gamestate_Logic call.
 	// Draw everything to the screen here.
 
+	al_set_target_bitmap(data->pixelator);
+	al_draw_scaled_bitmap(data->bg, 0, 0, 320, 180, -(int)data->offset, -(180*(data->zoom-1)) + (int)data->offset, 320*data->zoom, 180*data->zoom, 0);
+
+	DrawCharacter(game, data->maks, al_map_rgb(255,255,255), 0);
+
 	al_set_target_bitmap(data->area);
 	al_clear_to_color(al_map_rgba(0,0,0,0));
-	al_draw_bitmap(data->bg, 0, 0, 0);
-	al_draw_bitmap(data->sits, 117, 88, 0);
 
 	float spacing = 10, x = 117, y = 88;
 	int i = 0;
@@ -161,9 +164,8 @@ void Gamestate_Draw(struct Game *game, struct WalkResources* data) {
 	}
 
 	al_set_target_bitmap(data->pixelator);
-	al_draw_bitmap(data->area, 0, 0, 0);
 	al_draw_scaled_bitmap(data->area, 0, 0, 320, 180, -(int)data->offset, -(180*(data->zoom-1)) + (int)data->offset, 320*data->zoom, 180*data->zoom, 0);
-	DrawCharacter(game, data->maks, al_map_rgb(255,255,255), 0);
+
 
 	al_set_target_bitmap(data->m);
 	al_clear_to_color(al_map_rgba(0,0,0,0));
@@ -224,7 +226,16 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	progress(game);
 
 	data->person = CreateCharacter(game, "person");
-	RegisterSpritesheet(game, data->person, "dos");
+	char* sprites[] = { "dorota", "dos", "green", "jagoda", "jukio", "maciej",
+	                    "random1", "random2", "random3",
+	                    "random1", "random2", "random3",
+	                    "random1", "random2", "random3",
+	                    "random1", "random2", "random3",
+	                    "raxter", "shark", "sos", "threef", "tyr", "vera"};
+	for (int i = 0; i < sizeof(sprites)/sizeof(sprites[0]); i++) {
+		RegisterSpritesheet(game, data->person, sprites[i]);
+	}
+	RegisterSpritesheet(game, data->person, "maks");
 	RegisterSpritesheet(game, data->person, "maks-prep");
 	LoadSpritesheets(game, data->person);
 	progress(game);
@@ -234,9 +245,10 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 		data->people[i]->spritesheets = data->person->spritesheets;
 		data->people[i]->data = malloc(sizeof(int));
 		*((int*)data->people[i]->data) = rand() % 5;
-		SelectSpritesheet(game, data->people[i], "dos");
+		SelectSpritesheet(game, data->people[i], sprites[rand() % (sizeof(sprites)/sizeof(sprites[0]))]);
 		progress(game);
 	}
+	SelectSpritesheet(game, data->people[MAKS], "maks");
 
 	data->bg = al_load_bitmap(GetDataFilePath(game, "bg.png"));
 	data->sits = al_load_bitmap(GetDataFilePath(game, "sits.png"));

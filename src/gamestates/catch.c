@@ -48,16 +48,19 @@ void Gamestate_Draw(struct Game *game, struct CatchResources* data) {
 
 	al_set_target_backbuffer(game->display);
 	DrawCharacter(game, data->bg, al_map_rgb(255,255,255), 0);
-	DrawCharacter(game, data->hand, al_map_rgb(255,255,255), 0);
 
 	int i = data->pos / 64 + 1;
 	float remainder = (data->pos / 64.0) - (i - 1);
 	al_draw_tinted_bitmap(data->dell[i-1], al_map_rgba_f(1.0-remainder,1.0-remainder,1.0-remainder,1.0-remainder), 0, 0, 0);
 	al_draw_bitmap(data->dell[i], 0, 0, 0);
 
+	DrawCharacter(game, data->hand, al_map_rgb(255,255,255), 0);
+
 	DrawCharacter(game, data->glow, al_map_rgb(255,255,255), 0);
 	DrawCharacter(game, data->glow, al_map_rgb(255,255,255), 0);
 	DrawCharacter(game, data->key, al_map_rgb(255,255,255), 0);
+
+	//al_draw_filled_rectangle(0, 0, data->pos + 30, 180, al_map_rgba(128,128,128,128));
 
 }
 
