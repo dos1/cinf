@@ -82,6 +82,8 @@ void Gamestate_Stop(struct Game *game, struct SlavicResources* data) {
 
 void Gamestate_Unload(struct Game *game, struct SlavicResources* data) {
 	TM_Destroy(data->timeline);
+	al_destroy_sample_instance(data->sound);
+	al_destroy_sample(data->sample);
 	free(data);
 }
 

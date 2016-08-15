@@ -9,4 +9,7 @@ struct CommonResources {
 		bool logo;
 };
 
+struct CommonResources* CreateGameData(struct Game *game);
+void DestroyGameData(struct Game *game, struct CommonResources *resources);
+
 void StartGame(struct Game *game, bool restart);

@@ -24,6 +24,17 @@
 #include "common.h"
 #include <libsuperderpy.h>
 
+struct CommonResources* CreateGameData(struct Game *game) {
+	return calloc(1, sizeof(struct CommonResources));
+}
+
+void DestroyGameData(struct Game *game, struct CommonResources *resources) {
+	if (resources->music) al_destroy_audio_stream(resources->music);
+	if (resources->button) al_destroy_sample_instance(resources->button);
+	if (resources->button_sample) al_destroy_sample(resources->button_sample);
+	free(resources);
+}
+
 void StartGame(struct Game *game, bool restart) {
 	LoadGamestate(game, "intro");
 	LoadGamestate(game, "fall");

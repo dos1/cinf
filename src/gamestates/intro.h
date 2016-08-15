@@ -23,7 +23,6 @@ struct IntroResources {
 		// This struct is for every resource allocated and used by your gamestate.
 		// It gets created on load and then gets passed around to all other function calls.
 		ALLEGRO_FONT *font;
-		ALLEGRO_BITMAP *bitmap;
 		struct Timeline *timeline;
 		ALLEGRO_SAMPLE *sample;
 		ALLEGRO_SAMPLE_INSTANCE *andnow;

@@ -27,7 +27,7 @@
 
 const int MAKS = 64-16;
 
-int Gamestate_ProgressCount = 67; // number of loading steps as reported by Gamestate_Load
+int Gamestate_ProgressCount = 72; // number of loading steps as reported by Gamestate_Load
 
 bool Move(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
 	struct WalkResources *data = action->arguments->value;
@@ -268,11 +268,13 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	data->area = al_create_bitmap(640, 360);
 	data->m = al_create_bitmap(320, 180);
 	data->pixelator = al_create_bitmap(320, 180);
+	progress(game);
 
 	data->leftkey = CreateCharacter(game, "key");
 	RegisterSpritesheet(game, data->leftkey, "ready");
 	RegisterSpritesheet(game, data->leftkey, "pressed");
 	LoadSpritesheets(game, data->leftkey);
+	progress(game);
 
 	al_set_target_bitmap(data->leftkey->spritesheets->bitmap);
 	al_draw_text(data->font, al_map_rgb(0,0,0), 18, 15, ALLEGRO_ALIGN_LEFT, "<");
@@ -280,11 +282,13 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	al_set_target_bitmap(data->leftkey->spritesheets->next->bitmap);
 	al_draw_text(data->font, al_map_rgb(0,0,0), 16, 13, ALLEGRO_ALIGN_LEFT, "<");
 	al_draw_text(data->font, al_map_rgb(0,0,0), 17, 13, ALLEGRO_ALIGN_LEFT, "-");
+	progress(game);
 
 	data->rightkey = CreateCharacter(game, "key");
 	RegisterSpritesheet(game, data->rightkey, "ready");
 	RegisterSpritesheet(game, data->rightkey, "pressed");
 	LoadSpritesheets(game, data->rightkey);
+	progress(game);
 
 	al_set_target_bitmap(data->rightkey->spritesheets->bitmap);
 	al_draw_text(data->font, al_map_rgb(0,0,0), 21, 15, ALLEGRO_ALIGN_LEFT, ">");
@@ -292,6 +296,7 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	al_set_target_bitmap(data->rightkey->spritesheets->next->bitmap);
 	al_draw_text(data->font, al_map_rgb(0,0,0), 19, 13, ALLEGRO_ALIGN_LEFT, ">");
 	al_draw_text(data->font, al_map_rgb(0,0,0), 16, 13, ALLEGRO_ALIGN_LEFT, "-");
+	progress(game);
 
 	data->sample = al_load_sample(GetDataFilePath(game, "chimpology.flac"));
 	data->chimpology = al_create_sample_instance(data->sample);
@@ -305,6 +310,24 @@ void Gamestate_Unload(struct Game *game, struct WalkResources* data) {
 	// Called when the gamestate library is being unloaded.
 	// Good place for freeing all allocated memory and resources.
 	al_destroy_font(data->font);
+	DestroyCharacter(game, data->maks);
+	for (int i=0; i<64; i++) {
+		data->people[i]->spritesheets = NULL; // shared with data->person, so free only once
+		DestroyCharacter(game, data->people[i]);
+	}
+	DestroyCharacter(game, data->person);
+	DestroyCharacter(game, data->leftkey);
+	DestroyCharacter(game, data->rightkey);
+	al_destroy_bitmap(data->bg);
+	al_destroy_bitmap(data->sits);
+	al_destroy_bitmap(data->area);
+	al_destroy_bitmap(data->meter);
+	al_destroy_bitmap(data->marker);
+	al_destroy_bitmap(data->pixelator);
+	al_destroy_bitmap(data->m);
+	TM_Destroy(data->timeline);
+	al_destroy_sample_instance(data->chimpology);
+	al_destroy_sample(data->sample);
 	free(data);
 }
 

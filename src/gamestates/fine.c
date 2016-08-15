@@ -26,7 +26,7 @@
 #include <allegro5/allegro_primitives.h>
 #include "fine.h"
 
-int Gamestate_ProgressCount = 2; // number of loading steps as reported by Gamestate_Load
+int Gamestate_ProgressCount = 3; // number of loading steps as reported by Gamestate_Load
 
 void Gamestate_Logic(struct Game *game, struct FineResources* data) {
 	// Called 60 times per second. Here you should do all your game logic.
@@ -63,6 +63,7 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	data->fine = al_load_audio_stream(GetDataFilePath(game, "cif.flac"), 4, 1024);
 	al_set_audio_stream_playing(data->fine, false);
 	al_attach_audio_stream_to_mixer(data->fine, game->audio.voice);
+	progress(game);
 
 	data->sample = al_load_sample(GetDataFilePath(game, "end.flac"));
 	data->end = al_create_sample_instance(data->sample);
@@ -77,6 +78,10 @@ void Gamestate_Unload(struct Game *game, struct FineResources* data) {
 	// Called when the gamestate library is being unloaded.
 	// Good place for freeing all allocated memory and resources.
 	al_destroy_font(data->font);
+	al_destroy_bitmap(data->bitmap);
+	al_destroy_audio_stream(data->fine);
+	al_destroy_sample(data->sample);
+	al_destroy_sample_instance(data->end);
 	free(data);
 }
 

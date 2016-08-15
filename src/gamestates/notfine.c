@@ -25,7 +25,7 @@
 #include <allegro5/allegro_primitives.h>
 #include "notfine.h"
 
-int Gamestate_ProgressCount = 2; // number of loading steps as reported by Gamestate_Load
+int Gamestate_ProgressCount = 3; // number of loading steps as reported by Gamestate_Load
 
 void Gamestate_Logic(struct Game *game, struct NotFineResources* data) {
 	// Called 60 times per second. Here you should do all your game logic.
@@ -58,6 +58,7 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	data->sample = al_load_sample(GetDataFilePath(game, "boom.flac"));
 	data->boom = al_create_sample_instance(data->sample);
 	al_attach_sample_instance_to_mixer(data->boom, game->audio.fx);
+	progress(game);
 
 	LoadGamestate(game, "menu");
 
@@ -68,6 +69,9 @@ void Gamestate_Unload(struct Game *game, struct NotFineResources* data) {
 	// Called when the gamestate library is being unloaded.
 	// Good place for freeing all allocated memory and resources.
 	al_destroy_font(data->font);
+	al_destroy_bitmap(data->bitmap);
+	al_destroy_sample_instance(data->boom);
+	al_destroy_sample(data->sample);
 	free(data);
 }
 

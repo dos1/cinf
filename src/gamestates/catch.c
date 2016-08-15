@@ -25,7 +25,7 @@
 #include <allegro5/allegro_primitives.h>
 #include "catch.h"
 
-int Gamestate_ProgressCount = 2; // number of loading steps as reported by Gamestate_Load
+int Gamestate_ProgressCount = 7; // number of loading steps as reported by Gamestate_Load
 
 void Gamestate_Logic(struct Game *game, struct CatchResources* data) {
 	// Called 60 times per second. Here you should do all your game logic.
@@ -112,15 +112,18 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	data->hand = CreateCharacter(game, "hand");
 	RegisterSpritesheet(game, data->hand, "hand");
 	LoadSpritesheets(game, data->hand);
+	progress(game);
 
 	data->glow = CreateCharacter(game, "glow");
 	RegisterSpritesheet(game, data->glow, "glow");
 	LoadSpritesheets(game, data->glow);
+	progress(game);
 
 	data->key = CreateCharacter(game, "key");
 	RegisterSpritesheet(game, data->key, "ready");
 	RegisterSpritesheet(game, data->key, "pressed");
 	LoadSpritesheets(game, data->key);
+	progress(game);
 
 	data->ch = 'a' + (rand() % ('z'-'a'));
 
@@ -132,6 +135,7 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	al_draw_text(data->font, al_map_rgb(0,0,0), 19, 15, ALLEGRO_ALIGN_LEFT, text);
 	al_set_target_bitmap(data->key->spritesheets->next->bitmap);
 	al_draw_text(data->font, al_map_rgb(0,0,0), 17, 13, ALLEGRO_ALIGN_LEFT, text);
+	progress(game);
 
 	data->dell[0] = al_load_bitmap(GetDataFilePath(game, "dell0.png"));
 	data->dell[1] = al_load_bitmap(GetDataFilePath(game, "dell1.png"));
@@ -139,6 +143,7 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	data->dell[3] = al_load_bitmap(GetDataFilePath(game, "dell3.png"));
 	data->dell[4] = al_load_bitmap(GetDataFilePath(game, "dell4.png"));
 	data->dell[5] = al_load_bitmap(GetDataFilePath(game, "dell5.png"));
+	progress(game);
 
 	data->sample = al_load_sample(GetDataFilePath(game, "bdzium.flac"));
 	data->sound = al_create_sample_instance(data->sample);
@@ -151,6 +156,15 @@ void Gamestate_Unload(struct Game *game, struct CatchResources* data) {
 	// Called when the gamestate library is being unloaded.
 	// Good place for freeing all allocated memory and resources.
 	al_destroy_font(data->font);
+	DestroyCharacter(game, data->bg);
+	DestroyCharacter(game, data->hand);
+	DestroyCharacter(game, data->glow);
+	DestroyCharacter(game, data->key);
+	for (int i=0; i < 6; i++) {
+		al_destroy_bitmap(data->dell[i]);
+	}
+	al_destroy_sample_instance(data->sound);
+	al_destroy_sample(data->sample);
 	free(data);
 }
 

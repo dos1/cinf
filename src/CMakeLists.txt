@@ -18,7 +18,7 @@ if (APPLE)
    endif(APPLE)
 
 add_executable(${EXECUTABLE} WIN32 MACOSX_BUNDLE ${EXECUTABLE_SRC_LIST})
-target_link_libraries(${EXECUTABLE} libsuperderpy)
+target_link_libraries(${EXECUTABLE} libsuperderpy "libsuperderpy-${LIBSUPERDERPY_GAMENAME}")
 install(TARGETS ${EXECUTABLE} DESTINATION ${BIN_INSTALL_DIR})
 
 add_library("libsuperderpy-${LIBSUPERDERPY_GAMENAME}" SHARED "common.c")

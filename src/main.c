@@ -46,9 +46,11 @@ int main(int argc, char** argv) {
 	LoadGamestate(game, "slavic");
 	StartGamestate(game, "dosowisko");
 
-	game->data = calloc(1, sizeof(struct CommonResources));
+	game->data = CreateGameData(game);
 
 	libsuperderpy_run(game);
+
+	DestroyGameData(game, game->data);
 
 	libsuperderpy_destroy(game);
 

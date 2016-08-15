@@ -25,7 +25,7 @@
 #include <allegro5/allegro_primitives.h>
 #include "intro.h"
 
-int Gamestate_ProgressCount = 2; // number of loading steps as reported by Gamestate_Load
+int Gamestate_ProgressCount = 3; // number of loading steps as reported by Gamestate_Load
 
 bool Switch(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
 	if (state == TM_ACTIONSTATE_START) {
@@ -81,8 +81,6 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	struct IntroResources *data = malloc(sizeof(struct IntroResources));
 	data->font = al_create_builtin_font();
 	progress(game); // report that we progressed with the loading, so the engine can draw a progress bar
-	data->bitmap = al_load_bitmap(GetDataFilePath(game, "fine.png"));
-	progress(game);
 
 	data->timeline = TM_Init(game, "timeline");
 
@@ -92,10 +90,12 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 		al_set_audio_stream_playmode(game->data->music, ALLEGRO_PLAYMODE_LOOP);
 		al_set_audio_stream_playing(game->data->music, false);
 	}
+	progress(game);
 
 	data->sample = al_load_sample(GetDataFilePath(game, "andnow.flac"));
 	data->andnow = al_create_sample_instance(data->sample);
 	al_attach_sample_instance_to_mixer(data->andnow, game->audio.voice);
+	progress(game);
 
 	if (!game->data->button) {
 		game->data->button_sample = al_load_sample(GetDataFilePath(game, "button.flac"));
@@ -110,6 +110,9 @@ void Gamestate_Unload(struct Game *game, struct IntroResources* data) {
 	// Called when the gamestate library is being unloaded.
 	// Good place for freeing all allocated memory and resources.
 	al_destroy_font(data->font);
+	TM_Destroy(data->timeline);
+	al_destroy_sample_instance(data->andnow);
+	al_destroy_sample(data->sample);
 	free(data);
 }
 
