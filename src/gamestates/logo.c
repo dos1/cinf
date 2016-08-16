@@ -74,6 +74,7 @@ void Gamestate_Start(struct Game *game, struct LogoResources* data) {
 	// Called when this gamestate gets control. Good place for initializing state,
 	// playing music etc.
 	game->data->logo = true;
+	data->pos = 0;
 	StartGamestate(game, "menu");
 }
 

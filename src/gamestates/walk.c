@@ -30,7 +30,7 @@ const int MAKS = 64-16;
 int Gamestate_ProgressCount = 72; // number of loading steps as reported by Gamestate_Load
 
 bool Move(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
-	struct WalkResources *data = action->arguments->value;
+	struct WalkResources *data = TM_GetArg(action->arguments, 0);
 	if (state == TM_ACTIONSTATE_RUNNING) {
 		data->offset+=0.09;
 	}
@@ -38,7 +38,7 @@ bool Move(struct Game *game, struct TM_Action *action, enum TM_ActionState state
 }
 
 bool Skew(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
-	struct WalkResources *data = action->arguments->value;
+	struct WalkResources *data = TM_GetArg(action->arguments, 0);
 	if (state == TM_ACTIONSTATE_START) {
 		data->started = true;
 	}
@@ -55,7 +55,7 @@ bool Skew(struct Game *game, struct TM_Action *action, enum TM_ActionState state
 }
 
 bool ZoomOut(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
-	struct WalkResources *data = action->arguments->value;
+	struct WalkResources *data = TM_GetArg(action->arguments, 0);
 	if (state == TM_ACTIONSTATE_RUNNING) {
 		data->zoom+=0.01;
 		if (data->zoom >= 2) {
@@ -66,7 +66,7 @@ bool ZoomOut(struct Game *game, struct TM_Action *action, enum TM_ActionState st
 }
 
 bool ShowMeter(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
-	struct WalkResources *data = action->arguments->value;
+	struct WalkResources *data = TM_GetArg(action->arguments, 0);
 	if (state == TM_ACTIONSTATE_START) {
 		data->skew = 0;
 	}
@@ -80,7 +80,7 @@ bool ShowMeter(struct Game *game, struct TM_Action *action, enum TM_ActionState 
 }
 
 bool ShowMaks(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
-	struct WalkResources *data = action->arguments->value;
+	struct WalkResources *data = TM_GetArg(action->arguments, 0);
 	if (state == TM_ACTIONSTATE_RUNNING) {
 		SetCharacterPosition(game, data->maks, 16, 82, 0);
 		SetCharacterPosition(game, data->people[MAKS], -100, -100, 0);
@@ -89,7 +89,7 @@ bool ShowMaks(struct Game *game, struct TM_Action *action, enum TM_ActionState s
 }
 
 bool PrepMaks(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
-	struct WalkResources *data = action->arguments->value;
+	struct WalkResources *data = TM_GetArg(action->arguments, 0);
 	if (state == TM_ACTIONSTATE_START) {
 		SelectSpritesheet(game, data->people[MAKS], "maks-prep");
 		MoveCharacter(game, data->people[MAKS], -2, -5, 0);
@@ -98,16 +98,19 @@ bool PrepMaks(struct Game *game, struct TM_Action *action, enum TM_ActionState s
 }
 
 bool MovePrepingMaks(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
-	struct WalkResources *data = action->arguments->value;
+	struct WalkResources *data = TM_GetArg(action->arguments, 0);
+	int *pos;
 	if (state == TM_ACTIONSTATE_INIT) {
-		action->arguments = TM_AddToArgs(action->arguments, 1, malloc(sizeof(int)));
-		*((int*)action->arguments->next->value) = 0;
-//		SetCharacterPosition(game, data->maks, 12, 80, 0);
+		pos = malloc(sizeof(int));
+		action->arguments = TM_AddToArgs(action->arguments, 1, pos);
+		*pos = 0;
+	} else {
+		pos = TM_GetArg(action->arguments, 1);
 	}
 	if (state == TM_ACTIONSTATE_RUNNING) {
-		(*((int*)action->arguments->next->value))++;
-		if (*((int*)action->arguments->next->value) == 10) {
-			*((int*)action->arguments->next->value) = 0;
+		(*pos)++;
+		if (*pos == 10) {
+			*pos = 0;
 			MoveCharacter(game, data->people[MAKS], -3, 0, 0);
 
 			if (data->people[MAKS]->x <= 5) {
@@ -116,7 +119,7 @@ bool MovePrepingMaks(struct Game *game, struct TM_Action *action, enum TM_Action
 		}
 	}
 	if (state == TM_ACTIONSTATE_DESTROY) {
-		free(action->arguments->next->value);
+		free(pos);
 	}
 	return false;
 }
@@ -313,6 +316,7 @@ void Gamestate_Unload(struct Game *game, struct WalkResources* data) {
 	DestroyCharacter(game, data->maks);
 	for (int i=0; i<64; i++) {
 		data->people[i]->spritesheets = NULL; // shared with data->person, so free only once
+		free(data->people[i]->data);
 		DestroyCharacter(game, data->people[i]);
 	}
 	DestroyCharacter(game, data->person);

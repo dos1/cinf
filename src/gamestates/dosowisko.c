@@ -32,7 +32,7 @@ static const char* text = "# dosowisko.net";
 
 //==================================Timeline manager actions BEGIN
 bool FadeIn(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
-	struct dosowiskoResources *data = action->arguments->value;
+	struct dosowiskoResources *data = TM_GetArg(action->arguments, 0);
 	if (state == TM_ACTIONSTATE_START) {
 		data->fade=0;
 	}
@@ -48,7 +48,7 @@ bool FadeIn(struct Game *game, struct TM_Action *action, enum TM_ActionState sta
 }
 
 bool FadeOut(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
-	struct dosowiskoResources *data = action->arguments->value;
+	struct dosowiskoResources *data = TM_GetArg(action->arguments, 0);
 	if (state == TM_ACTIONSTATE_START) {
 		data->fadeout = true;
 	}
@@ -63,13 +63,13 @@ bool End(struct Game *game, struct TM_Action *action, enum TM_ActionState state)
 }
 
 bool Play(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
-	ALLEGRO_SAMPLE_INSTANCE *data = action->arguments->value;
+	ALLEGRO_SAMPLE_INSTANCE *data = TM_GetArg(action->arguments, 0);
 	if (state == TM_ACTIONSTATE_RUNNING) al_play_sample_instance(data);
 	return true;
 }
 
 bool Type(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
-	struct dosowiskoResources *data = action->arguments->value;
+	struct dosowiskoResources *data = TM_GetArg(action->arguments, 0);
 	if (state == TM_ACTIONSTATE_RUNNING) {
 		strncpy(data->text, text, data->pos++);
 		data->text[data->pos] = 0;

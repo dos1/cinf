@@ -42,7 +42,7 @@ bool PlayMusic(struct Game *game, struct TM_Action *action, enum TM_ActionState 
 }
 
 bool PlaySound(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
-	struct IntroResources *data = action->arguments->value;
+	struct IntroResources *data = TM_GetArg(action->arguments, 0);
 	if (state == TM_ACTIONSTATE_START) {
 		al_play_sample_instance(data->andnow);
 	}
