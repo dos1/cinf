@@ -31,7 +31,7 @@ void Gamestate_Logic(struct Game *game, struct FallResources* data) {
 	AnimateCharacter(game, data->maks, 1);
 
 	if (!data->maks->successor) {
-		SwitchGamestate(game, "fall", "catch");
+		SwitchCurrentGamestate(game, "catch");
 	}
 }
 
@@ -47,7 +47,7 @@ void Gamestate_ProcessEvent(struct Game *game, struct FallResources* data, ALLEG
 	// Called for each event in Allegro event queue.
 	// Here you can handle user input, expiring timers etc.
 	if ((ev->type==ALLEGRO_EVENT_KEY_DOWN) && (ev->keyboard.keycode == ALLEGRO_KEY_ESCAPE)) {
-		SwitchGamestate(game, "fall", "logo");
+		SwitchCurrentGamestate(game, "logo");
 		// When there are no active gamestates, the engine will quit.
 	}
 }

@@ -132,7 +132,7 @@ void Gamestate_Logic(struct Game *game, struct WalkResources* data) {
 	TM_Process(data->timeline);
 
 	if (fabs(data->skew) >= 1) {
-		SwitchGamestate(game, "walk", "fall");
+		SwitchCurrentGamestate(game, "fall");
 	}
 }
 
@@ -203,7 +203,7 @@ void Gamestate_ProcessEvent(struct Game *game, struct WalkResources* data, ALLEG
 	// Here you can handle user input, expiring timers etc.
 	TM_HandleEvent(data->timeline, ev);
 	if ((ev->type==ALLEGRO_EVENT_KEY_DOWN) && (ev->keyboard.keycode == ALLEGRO_KEY_ESCAPE)) {
-		SwitchGamestate(game, "walk", "logo"); // mark this gamestate to be stopped and unloaded
+		SwitchCurrentGamestate(game, "logo"); // mark this gamestate to be stopped and unloaded
 		// When there are no active gamestates, the engine will quit.
 	}
 	if (!data->started) return;

@@ -38,12 +38,12 @@ void Gamestate_Logic(struct Game *game, struct CatchResources* data) {
 	}
 	if (data->pos >= 288) {
 		data->pos = 287;
-		SwitchGamestate(game, "catch", "notfine");
+		SwitchCurrentGamestate(game, "notfine");
 	}
 	//PrintConsole(game, "pos: %f, hand: %f, minus: %f", (float)data->pos, 300 + data->hand->x, 300 + data->hand->x - data->pos);
 
 	if (300 + data->hand->x - data->pos > 10) {
-		SwitchGamestate(game, "catch", "fine");
+		SwitchCurrentGamestate(game, "fine");
 	}
 }
 
@@ -73,7 +73,7 @@ void Gamestate_ProcessEvent(struct Game *game, struct CatchResources* data, ALLE
 	// Called for each event in Allegro event queue.
 	// Here you can handle user input, expiring timers etc.
 	if ((ev->type==ALLEGRO_EVENT_KEY_DOWN) && (ev->keyboard.keycode == ALLEGRO_KEY_ESCAPE)) {
-		SwitchGamestate(game, "catch", "logo"); // mark this gamestate to be stopped and unloaded
+		SwitchCurrentGamestate(game, "logo"); // mark this gamestate to be stopped and unloaded
 		// When there are no active gamestates, the engine will quit.
 	}
 	if (ev->type==ALLEGRO_EVENT_KEY_DOWN) {

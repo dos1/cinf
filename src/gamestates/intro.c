@@ -29,7 +29,7 @@ int Gamestate_ProgressCount = 3; // number of loading steps as reported by Games
 
 bool Switch(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
 	if (state == TM_ACTIONSTATE_START) {
-		SwitchGamestate(game, "intro", "walk");
+		SwitchCurrentGamestate(game, "walk");
 	}
 	return true;
 }
@@ -71,7 +71,7 @@ void Gamestate_ProcessEvent(struct Game *game, struct IntroResources* data, ALLE
 	// Here you can handle user input, expiring timers etc.
 	TM_HandleEvent(data->timeline, ev);
 	if ((ev->type==ALLEGRO_EVENT_KEY_DOWN) && (ev->keyboard.keycode == ALLEGRO_KEY_ESCAPE)) {
-		SwitchGamestate(game, "intro", "walk");
+		SwitchCurrentGamestate(game, "walk");
 	}
 }
 
