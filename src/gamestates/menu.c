@@ -134,7 +134,7 @@ void Gamestate_ProcessEvent(struct Game *game, struct MenuResources* data, ALLEG
 						al_show_mouse_cursor(game->display);
 					}
 					al_set_display_flag(game->display, ALLEGRO_FULLSCREEN_WINDOW, game->config.fullscreen);
-					SetupViewport(game);
+					SetupViewport(game, game->viewport_config);
 					PrintConsole(game, "Fullscreen toggled");
 					break;
 				case 5:

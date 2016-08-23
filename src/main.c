@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
 	al_set_org_name("dosowisko.net");
 	al_set_app_name("Computer Is (Not) Fine");
 
-	struct Game *game = libsuperderpy_init(argc, argv, "cinf");
+	struct Game *game = libsuperderpy_init(argc, argv, "cinf", (struct libsuperderpy_viewport){320, 180});
 	if (!game) { return 1; }
 
 	al_set_window_title(game->display, "Computer Is (Not) Fine");
