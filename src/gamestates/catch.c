@@ -42,7 +42,7 @@ void Gamestate_Logic(struct Game *game, struct CatchResources* data) {
 	}
 	//PrintConsole(game, "pos: %f, hand: %f, minus: %f", (float)data->pos, 300 + data->hand->x, 300 + data->hand->x - data->pos);
 
-	if (300 + data->hand->x - data->pos > 10) {
+	if (300 + GetCharacterX(game, data->hand) - data->pos > 10) {
 		SwitchCurrentGamestate(game, "fine");
 	}
 }
@@ -83,7 +83,7 @@ void Gamestate_ProcessEvent(struct Game *game, struct CatchResources* data, ALLE
 			al_stop_sample_instance(game->data->button);
 			al_play_sample_instance(game->data->button);
 			MoveCharacter(game, data->hand, 9, 0, 0);
-			if (data->hand->x > 0) {
+			if (GetCharacterX(game, data->hand) > 0) {
 				SetCharacterPosition(game, data->hand, 0, 0, 0);
 			}
 			SelectSpritesheet(game, data->key, "pressed");

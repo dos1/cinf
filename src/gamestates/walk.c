@@ -113,7 +113,7 @@ bool MovePrepingMaks(struct Game *game, struct TM_Action *action, enum TM_Action
 			*pos = 0;
 			MoveCharacter(game, data->people[MAKS], -3, 0, 0);
 
-			if (data->people[MAKS]->x <= 5) {
+			if (GetCharacterX(game, data->people[MAKS]) <= 5) {
 				return true;
 			}
 		}
