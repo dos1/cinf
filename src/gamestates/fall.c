@@ -50,6 +50,10 @@ void Gamestate_ProcessEvent(struct Game *game, struct FallResources* data, ALLEG
 		SwitchCurrentGamestate(game, "logo");
 		// When there are no active gamestates, the engine will quit.
 	}
+	if ((ev->type==ALLEGRO_EVENT_KEY_DOWN) && (ev->keyboard.keycode == ALLEGRO_KEY_BACK)) {
+		SwitchCurrentGamestate(game, "logo");
+		// When there are no active gamestates, the engine will quit.
+	}
 }
 
 void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {

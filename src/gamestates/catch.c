@@ -45,6 +45,14 @@ void Gamestate_Logic(struct Game *game, struct CatchResources* data) {
 	if (300 + GetCharacterX(game, data->hand) - data->pos > 10) {
 		SwitchCurrentGamestate(game, "fine");
 	}
+
+	if (game->data->touch) {
+		SetCharacterPosition(game, data->glow, data->keyposx-139, 0, 0);
+		SetCharacterPosition(game, data->key, data->keyposx, 136, 0);
+	} else {
+		SetCharacterPosition(game, data->glow, 0, 0, 0);
+		SetCharacterPosition(game, data->key, 139, 136, 0);
+	}
 }
 
 void Gamestate_Draw(struct Game *game, struct CatchResources* data) {
@@ -69,6 +77,16 @@ void Gamestate_Draw(struct Game *game, struct CatchResources* data) {
 
 }
 
+void MoveHand(struct Game *game, struct CatchResources* data) {
+	al_stop_sample_instance(game->data->button);
+	al_play_sample_instance(game->data->button);
+	MoveCharacter(game, data->hand, 9, 0, 0);
+	if (GetCharacterX(game, data->hand) > 0) {
+		SetCharacterPosition(game, data->hand, 0, 0, 0);
+	}
+	SelectSpritesheet(game, data->key, "pressed");
+}
+
 void Gamestate_ProcessEvent(struct Game *game, struct CatchResources* data, ALLEGRO_EVENT *ev) {
 	// Called for each event in Allegro event queue.
 	// Here you can handle user input, expiring timers etc.
@@ -76,17 +94,15 @@ void Gamestate_ProcessEvent(struct Game *game, struct CatchResources* data, ALLE
 		SwitchCurrentGamestate(game, "logo"); // mark this gamestate to be stopped and unloaded
 		// When there are no active gamestates, the engine will quit.
 	}
+	if ((ev->type==ALLEGRO_EVENT_KEY_DOWN) && (ev->keyboard.keycode == ALLEGRO_KEY_BACK)) {
+		SwitchCurrentGamestate(game, "logo");
+		// When there are no active gamestates, the engine will quit.
+	}
 	if (ev->type==ALLEGRO_EVENT_KEY_DOWN) {
 		const char* keyname = al_keycode_to_name(ev->keyboard.keycode);
 		PrintConsole(game, "Pressed: %s", keyname);
 		if ((keyname[0] == data->ch) || (keyname[0] == data->ch + 'A' - 'a')) {
-			al_stop_sample_instance(game->data->button);
-			al_play_sample_instance(game->data->button);
-			MoveCharacter(game, data->hand, 9, 0, 0);
-			if (GetCharacterX(game, data->hand) > 0) {
-				SetCharacterPosition(game, data->hand, 0, 0, 0);
-			}
-			SelectSpritesheet(game, data->key, "pressed");
+			MoveHand(game, data);
 		}
 		//PrintConsole(game, "%s", al_keycode_to_name(ev->keyboard.keycode));
 	}
@@ -95,6 +111,18 @@ void Gamestate_ProcessEvent(struct Game *game, struct CatchResources* data, ALLE
 		if (keyname[0] == data->ch) {
 			SelectSpritesheet(game, data->key, "ready");
 		}
+	}
+	if (ev->type==ALLEGRO_EVENT_TOUCH_BEGIN) {
+		if (ev->touch.primary) {
+			int x = ev->touch.x, y = ev->touch.y;
+			WindowCoordsToViewport(game, &x, &y);
+			if (IsOnCharacter(game, data->key, x, y)) {
+				MoveHand(game, data);
+			}
+		}
+	}
+	if ((ev->type==ALLEGRO_EVENT_TOUCH_CANCEL) || (ev->type==ALLEGRO_EVENT_TOUCH_END)) {
+		SelectSpritesheet(game, data->key, "ready");
 	}
 }
 
@@ -127,9 +155,16 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 
 	data->ch = 'a' + (rand() % ('z'-'a'));
 
+#ifndef ALLEGRO_ANDROID
 	char text[2];
 	text[0] = data->ch + 'A'-'a';
 	text[1] = 0;
+#else
+	char text[] = "!";
+#endif
+
+	data->keyposx = rand() % (game->viewport.width - al_get_bitmap_width(data->key->spritesheets->bitmap));
+	data->keyposy = game->viewport.height/2 + rand() % (game->viewport.height/2 - al_get_bitmap_height(data->key->spritesheets->bitmap));
 
 	al_set_target_bitmap(data->key->spritesheets->bitmap);
 	al_draw_text(data->font, al_map_rgb(0,0,0), 19, 15, ALLEGRO_ALIGN_LEFT, text);
@@ -176,9 +211,14 @@ void Gamestate_Start(struct Game *game, struct CatchResources* data) {
 	SelectSpritesheet(game, data->hand, "hand");
 	SetCharacterPosition(game, data->hand, -300, 0, 0);
 	SelectSpritesheet(game, data->glow, "glow");
-	SetCharacterPosition(game, data->glow, 0, 0, 0);
 	SelectSpritesheet(game, data->key, "ready");
-	SetCharacterPosition(game, data->key, 139, 136, 0);
+	if (game->data->touch) {
+		SetCharacterPosition(game, data->glow, data->keyposx-139, 0, 0);
+		SetCharacterPosition(game, data->key, data->keyposx, 136, 0);
+	} else {
+		SetCharacterPosition(game, data->glow, 0, 0, 0);
+		SetCharacterPosition(game, data->key, 139, 136, 0);
+	}
 	al_play_sample_instance(data->sound);
 	data->pos = 0;
 }

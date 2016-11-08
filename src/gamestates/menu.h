@@ -24,4 +24,5 @@ struct MenuResources {
 		// It gets created on load and then gets passed around to all other function calls.
 		ALLEGRO_FONT *font;
 		int option, blink;
+		int offset;
 };

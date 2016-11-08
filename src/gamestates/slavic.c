@@ -58,7 +58,7 @@ void Gamestate_Start(struct Game *game, struct SlavicResources* data) {
 
 void Gamestate_ProcessEvent(struct Game *game, struct SlavicResources* data, ALLEGRO_EVENT *ev) {
 	TM_HandleEvent(data->timeline, ev);
-	if ((ev->type==ALLEGRO_EVENT_KEY_DOWN) && (ev->keyboard.keycode == ALLEGRO_KEY_ESCAPE)) {
+	if (((ev->type==ALLEGRO_EVENT_KEY_DOWN) && (ev->keyboard.keycode == ALLEGRO_KEY_ESCAPE)) || (ev->type == ALLEGRO_EVENT_TOUCH_END)) {
 		UnloadAllGamestates(game);
 		StartGame(game, false);
 	}

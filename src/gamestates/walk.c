@@ -136,13 +136,6 @@ void Gamestate_Logic(struct Game *game, struct WalkResources* data) {
 	}
 }
 
-inline int min(int a, int b) {
-	return (a > b) ? b : a;
-}
-inline int max(int a, int b) {
-	return (a < b) ? b : a;
-}
-
 void Gamestate_Draw(struct Game *game, struct WalkResources* data) {
 	// Called as soon as possible, but no sooner than next Gamestate_Logic call.
 	// Draw everything to the screen here.
@@ -172,19 +165,15 @@ void Gamestate_Draw(struct Game *game, struct WalkResources* data) {
 		i++;
 	}
 
-	al_set_target_bitmap(data->pixelator);
-	al_draw_scaled_bitmap(data->area, 0, 0, 320, 180, -(int)data->offset, -(180*(data->zoom-1)) + (int)data->offset, 320*data->zoom, 180*data->zoom, 0);
-
-
 	al_set_target_bitmap(data->m);
 	al_clear_to_color(al_map_rgba(0,0,0,0));
 	al_draw_bitmap(data->meter, 11, 6, 0);
 	al_draw_filled_rectangle(11 + 4, 6 + 7, 309 - 4, 25 - 7, al_map_rgb(0,0,0));
 	al_draw_bitmap(data->marker, (309 - 4 - (11+4)) / 2 + 11 + 4 - 5, 6 + 2, 0);
 
-	al_draw_filled_rectangle((309 - 4 - (11+4)) / 2 + 11 + 4 + min(0, ((309 - 4 - (11+4)) / 2) * data->skew),
+	al_draw_filled_rectangle((309 - 4 - (11+4)) / 2 + 11 + 4 + fmin(0, ((309 - 4 - (11+4)) / 2) * data->skew),
 	                         6 + 7 + 1,
-	                         (309 - 4 - (11+4)) / 2 + 11 + 4 + max(0, ((309 - 4 - (11+4)) / 2) * data->skew),
+	                         (309 - 4 - (11+4)) / 2 + 11 + 4 + fmax(0, ((309 - 4 - (11+4)) / 2) * data->skew),
 	                         25 - 7 - 1,
 	                         al_map_rgb(255,0,0));
 
@@ -192,6 +181,7 @@ void Gamestate_Draw(struct Game *game, struct WalkResources* data) {
 	DrawCharacter(game, data->rightkey, al_map_rgb(255,255,255), 0);
 
 	al_set_target_bitmap(data->pixelator);
+	al_draw_scaled_bitmap(data->area, 0, 0, 320, 180, -(int)data->offset, -(180*(data->zoom-1)) + (int)data->offset, 320*data->zoom, 180*data->zoom, 0);
 	al_draw_bitmap(data->m, 0, data->meteroffset, 0);
 
 	al_set_target_backbuffer(game->display);
@@ -203,6 +193,10 @@ void Gamestate_ProcessEvent(struct Game *game, struct WalkResources* data, ALLEG
 	// Here you can handle user input, expiring timers etc.
 	TM_HandleEvent(data->timeline, ev);
 	if ((ev->type==ALLEGRO_EVENT_KEY_DOWN) && (ev->keyboard.keycode == ALLEGRO_KEY_ESCAPE)) {
+		SwitchCurrentGamestate(game, "logo"); // mark this gamestate to be stopped and unloaded
+		// When there are no active gamestates, the engine will quit.
+	}
+	if ((ev->type==ALLEGRO_EVENT_KEY_DOWN) && (ev->keyboard.keycode == ALLEGRO_KEY_BACK)) {
 		SwitchCurrentGamestate(game, "logo"); // mark this gamestate to be stopped and unloaded
 		// When there are no active gamestates, the engine will quit.
 	}
@@ -226,6 +220,26 @@ void Gamestate_ProcessEvent(struct Game *game, struct WalkResources* data, ALLEG
 	}
 	if ((ev->type==ALLEGRO_EVENT_KEY_UP) && (ev->keyboard.keycode == ALLEGRO_KEY_RIGHT)) {
 		SelectSpritesheet(game, data->rightkey, "ready");
+	}
+	if (ev->type==ALLEGRO_EVENT_TOUCH_BEGIN) {
+		int x = ev->touch.x, y = ev->touch.y;
+		WindowCoordsToViewport(game, &x, &y);
+		if (IsOnCharacter(game, data->leftkey, x, y)) {
+			SelectSpritesheet(game, data->leftkey, "pressed");
+			data->skew -= 0.1;
+			if (data->skew < -1) data->skew = -1;
+			al_stop_sample_instance(game->data->button);
+			al_play_sample_instance(game->data->button);
+		} else if (IsOnCharacter(game, data->rightkey, x, y)) {
+			SelectSpritesheet(game, data->rightkey, "pressed");
+			data->skew += 0.1;
+			if (data->skew > 1) data->skew = 1;
+			al_stop_sample_instance(game->data->button);
+			al_play_sample_instance(game->data->button);
+		}
+	}
+	if ((ev->type==ALLEGRO_EVENT_TOUCH_CANCEL) || (ev->type==ALLEGRO_EVENT_TOUCH_END)) {
+		SelectSpritesheet(game, (ev->touch.x < (al_get_display_width(game->display)/2)) ? data->leftkey : data->rightkey, "ready");
 	}
 }
 void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {

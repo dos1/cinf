@@ -24,7 +24,7 @@ struct WalkResources {
 		// It gets created on load and then gets passed around to all other function calls.
 		ALLEGRO_FONT *font;
 		struct Character *maks, *people[64], *person, *leftkey, *rightkey;
-		ALLEGRO_BITMAP *bg, *sits, *area, *meter, *marker, *pixelator, *m;
+		ALLEGRO_BITMAP *bg, *sits, *area, *meter, *marker, *pixelator, *m, *audience;
 		float offset, skew, level;
 		struct Timeline *timeline;
 		int meteroffset;

@@ -29,4 +29,6 @@ struct CatchResources {
 		char ch;
 		ALLEGRO_SAMPLE *sample;
 		ALLEGRO_SAMPLE_INSTANCE *sound;
+
+		int keyposx, keyposy;
 };

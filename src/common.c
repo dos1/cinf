@@ -28,6 +28,18 @@ struct CommonResources* CreateGameData(struct Game *game) {
 	return calloc(1, sizeof(struct CommonResources));
 }
 
+bool GlobalEventHandler(struct Game *game, ALLEGRO_EVENT *event) {
+	if (event->type == ALLEGRO_EVENT_TOUCH_BEGIN) {
+		game->data->touch = true;
+	}
+#ifndef ALLEGRO_ANDROID
+	if (event->type == ALLEGRO_EVENT_KEY_DOWN) {
+		game->data->touch = false;
+	}
+#endif
+	return false;
+}
+
 void DestroyGameData(struct Game *game, struct CommonResources *resources) {
 	if (resources->music) al_destroy_audio_stream(resources->music);
 	if (resources->button) al_destroy_sample_instance(resources->button);

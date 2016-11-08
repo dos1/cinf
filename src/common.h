@@ -7,9 +7,10 @@ struct CommonResources {
 		ALLEGRO_SAMPLE_INSTANCE *button;
 		int score;
 		bool logo;
+		bool touch;
 };
 
 struct CommonResources* CreateGameData(struct Game *game);
 void DestroyGameData(struct Game *game, struct CommonResources *resources);
-
+bool GlobalEventHandler(struct Game *game, ALLEGRO_EVENT *event);
 void StartGame(struct Game *game, bool restart);

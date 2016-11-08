@@ -17,7 +17,7 @@ if (APPLE)
 	   MACOSX_PACKAGE_LOCATION "Resources")
    endif(APPLE)
 
-add_executable(${EXECUTABLE} WIN32 MACOSX_BUNDLE ${EXECUTABLE_SRC_LIST})
+add_libsuperderpy_target(${EXECUTABLE_SRC_LIST})
 target_link_libraries(${EXECUTABLE} libsuperderpy "libsuperderpy-${LIBSUPERDERPY_GAMENAME}")
 install(TARGETS ${EXECUTABLE} DESTINATION ${BIN_INSTALL_DIR})
 

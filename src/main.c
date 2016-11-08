@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "defines.h"
 #include <stdio.h>
 #include <signal.h>
 #include "common.h"
@@ -35,12 +36,14 @@ int main(int argc, char** argv) {
 	srand(time(NULL));
 
 	al_set_org_name("dosowisko.net");
-	al_set_app_name("Computer Is (Not) Fine");
+	al_set_app_name(LIBSUPERDERPY_GAMENAME_PRETTY);
 
-	struct Game *game = libsuperderpy_init(argc, argv, "cinf", (struct libsuperderpy_viewport){320, 180});
+	struct Game *game = libsuperderpy_init(argc, argv, LIBSUPERDERPY_GAMENAME, (struct Viewport){320, 180});
 	if (!game) { return 1; }
 
-	al_set_window_title(game->display, "Computer Is (Not) Fine");
+	game->eventHandler = &GlobalEventHandler;
+
+	al_set_window_title(game->display, LIBSUPERDERPY_GAMENAME_PRETTY);
 
 	LoadGamestate(game, "dosowisko");
 	LoadGamestate(game, "slavic");
