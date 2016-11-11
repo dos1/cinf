@@ -169,9 +169,12 @@ void Gamestate_ProcessEvent(struct Game *game, struct dosowiskoResources* data, 
 void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	struct dosowiskoResources *data = malloc(sizeof(struct dosowiskoResources));
 	data->timeline = TM_Init(game, "main");
-	data->bitmap = al_create_bitmap(game->viewport.width, game->viewport.height);
 	data->checkerboard = al_create_bitmap(game->viewport.width, game->viewport.height);
+	int flags = al_get_new_bitmap_flags();
+	al_add_new_bitmap_flag(ALLEGRO_NO_PRESERVE_TEXTURE);
+	data->bitmap = al_create_bitmap(game->viewport.width, game->viewport.height);
 	data->pixelator = al_create_bitmap(game->viewport.width, game->viewport.height);
+	al_set_new_bitmap_flags(flags);
 
 	al_set_target_bitmap(data->checkerboard);
 	al_lock_bitmap(data->checkerboard, ALLEGRO_PIXEL_FORMAT_ANY, ALLEGRO_LOCK_WRITEONLY);
@@ -233,7 +236,13 @@ void Gamestate_Unload(struct Game *game, struct dosowiskoResources* data) {
 	free(data);
 }
 
-void Gamestate_Reload(struct Game *game, struct dosowiskoResources* data) {}
+void Gamestate_Reload(struct Game *game, struct dosowiskoResources* data) {
+	int flags = al_get_new_bitmap_flags();
+	al_add_new_bitmap_flag(ALLEGRO_NO_PRESERVE_TEXTURE);
+	data->pixelator = al_create_bitmap(game->viewport.width, game->viewport.height);
+	data->bitmap = al_create_bitmap(game->viewport.width, game->viewport.height);
+	al_set_new_bitmap_flags(flags);
+}
 
 void Gamestate_Pause(struct Game *game, struct dosowiskoResources* data) {
 	TM_Pause(data->timeline);

@@ -129,6 +129,15 @@ void Gamestate_Logic(struct Game *game, struct WalkResources* data) {
 	// Called 60 times per second. Here you should do all your game logic.
 	AnimateCharacter(game, data->maks, 1);
 	AnimateCharacter(game, data->person, 1);
+
+#ifdef ALLEGRO_ANDROID
+	SetCharacterPosition(game, data->leftkey, GetCharacterX(game, data->leftkey), 180 - data->meteroffset - 42, 0);
+	SetCharacterPosition(game, data->rightkey, GetCharacterX(game, data->rightkey), 180 - data->meteroffset - 42, 0);
+#else
+	SetCharacterPosition(game, data->leftkey, GetCharacterX(game, data->leftkey), data->meteroffset + 28, 0);
+	SetCharacterPosition(game, data->rightkey, GetCharacterX(game, data->rightkey), data->meteroffset + 28, 0);
+#endif
+
 	TM_Process(data->timeline);
 
 	if (fabs(data->skew) >= 1) {
@@ -137,13 +146,11 @@ void Gamestate_Logic(struct Game *game, struct WalkResources* data) {
 }
 
 void Gamestate_Draw(struct Game *game, struct WalkResources* data) {
+
 	// Called as soon as possible, but no sooner than next Gamestate_Logic call.
 	// Draw everything to the screen here.
 
 	al_set_target_bitmap(data->pixelator);
-	al_draw_scaled_bitmap(data->bg, 0, 0, 320, 180, -(int)data->offset, -(180*(data->zoom-1)) + (int)data->offset, 320*data->zoom, 180*data->zoom, 0);
-
-	DrawCharacter(game, data->maks, al_map_rgb(255,255,255), 0);
 
 	al_set_target_bitmap(data->area);
 	al_clear_to_color(al_map_rgba(0,0,0,0));
@@ -165,24 +172,25 @@ void Gamestate_Draw(struct Game *game, struct WalkResources* data) {
 		i++;
 	}
 
-	al_set_target_bitmap(data->m);
-	al_clear_to_color(al_map_rgba(0,0,0,0));
-	al_draw_bitmap(data->meter, 11, 6, 0);
-	al_draw_filled_rectangle(11 + 4, 6 + 7, 309 - 4, 25 - 7, al_map_rgb(0,0,0));
-	al_draw_bitmap(data->marker, (309 - 4 - (11+4)) / 2 + 11 + 4 - 5, 6 + 2, 0);
+	al_set_target_bitmap(data->pixelator);
+	al_draw_scaled_bitmap(data->bg, 0, 0, 320, 180, -(int)data->offset, -(180*(data->zoom-1)) + (int)data->offset, 320*data->zoom, 180*data->zoom, 0);
+
+	DrawCharacter(game, data->maks, al_map_rgb(255,255,255), 0);
+
+	al_draw_scaled_bitmap(data->area, 0, 0, 320, 180, -(int)data->offset, -(180*(data->zoom-1)) + (int)data->offset, 320*data->zoom, 180*data->zoom, 0);
+
+	al_draw_bitmap(data->meter, 11, 6 + data->meteroffset, 0);
+	al_draw_filled_rectangle(11 + 4, 6 + 7 + data->meteroffset, 309 - 4, 25 - 7 + data->meteroffset, al_map_rgb(0,0,0));
+	al_draw_bitmap(data->marker, (309 - 4 - (11+4)) / 2 + 11 + 4 - 5, 6 + 2 + data->meteroffset, 0);
 
 	al_draw_filled_rectangle((309 - 4 - (11+4)) / 2 + 11 + 4 + fmin(0, ((309 - 4 - (11+4)) / 2) * data->skew),
-	                         6 + 7 + 1,
+	                         6 + 7 + 1 + data->meteroffset,
 	                         (309 - 4 - (11+4)) / 2 + 11 + 4 + fmax(0, ((309 - 4 - (11+4)) / 2) * data->skew),
-	                         25 - 7 - 1,
+	                         25 - 7 - 1 + data->meteroffset,
 	                         al_map_rgb(255,0,0));
 
 	DrawCharacter(game, data->leftkey, al_map_rgb(255,255,255), 0);
 	DrawCharacter(game, data->rightkey, al_map_rgb(255,255,255), 0);
-
-	al_set_target_bitmap(data->pixelator);
-	al_draw_scaled_bitmap(data->area, 0, 0, 320, 180, -(int)data->offset, -(180*(data->zoom-1)) + (int)data->offset, 320*data->zoom, 180*data->zoom, 0);
-	al_draw_bitmap(data->m, 0, data->meteroffset, 0);
 
 	al_set_target_backbuffer(game->display);
 	al_draw_bitmap(data->pixelator, 0, 0, 0);
@@ -251,7 +259,9 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	data->maks = CreateCharacter(game, "maks");
 	RegisterSpritesheet(game, data->maks, "walk");
 	LoadSpritesheets(game, data->maks);
+
 	progress(game);
+
 
 	data->person = CreateCharacter(game, "person");
 	char* sprites[] = { "dorota", "dos", "green", "jagoda", "jukio", "maciej", "dalton",
@@ -282,9 +292,13 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	data->sits = al_load_bitmap(GetDataFilePath(game, "sits.png"));
 	data->meter = al_load_bitmap(GetDataFilePath(game, "meter.png"));
 	data->marker = al_load_bitmap(GetDataFilePath(game, "marker.png"));
+
+	int flags = al_get_new_bitmap_flags();
+	al_add_new_bitmap_flag(ALLEGRO_NO_PRESERVE_TEXTURE);
 	data->area = al_create_bitmap(640, 360);
-	data->m = al_create_bitmap(320, 180);
 	data->pixelator = al_create_bitmap(320, 180);
+	al_set_new_bitmap_flags(flags);
+
 	progress(game);
 
 	data->leftkey = CreateCharacter(game, "key");
@@ -342,7 +356,6 @@ void Gamestate_Unload(struct Game *game, struct WalkResources* data) {
 	al_destroy_bitmap(data->meter);
 	al_destroy_bitmap(data->marker);
 	al_destroy_bitmap(data->pixelator);
-	al_destroy_bitmap(data->m);
 	TM_Destroy(data->timeline);
 	al_destroy_sample_instance(data->chimpology);
 	al_destroy_sample(data->sample);
@@ -354,8 +367,8 @@ void Gamestate_Start(struct Game *game, struct WalkResources* data) {
 	// playing music etc.
 	SelectSpritesheet(game, data->maks, "walk");
 	SetCharacterPosition(game, data->maks, -120, 80, 0);
-	SetCharacterPosition(game, data->leftkey, 9, 28, 0);
-	SetCharacterPosition(game, data->rightkey, 320-2-48, 28, 0);
+	SetCharacterPosition(game, data->leftkey, 9, -128, 0);
+	SetCharacterPosition(game, data->rightkey, 320-2-48, -128, 0);
 	SelectSpritesheet(game, data->leftkey, "ready");
 	SelectSpritesheet(game, data->rightkey, "ready");
 	SelectSpritesheet(game, data->person, "kacpi");
@@ -407,6 +420,12 @@ void Gamestate_Stop(struct Game *game, struct WalkResources* data) {
 
 // Ignore those for now.
 // TODO: Check, comment, refine and/or remove:
-void Gamestate_Reload(struct Game *game, struct WalkResources* data) {}
+void Gamestate_Reload(struct Game *game, struct WalkResources* data) {
+	int flags = al_get_new_bitmap_flags();
+	al_add_new_bitmap_flag(ALLEGRO_NO_PRESERVE_TEXTURE);
+	data->area = al_create_bitmap(640, 360);
+	data->pixelator = al_create_bitmap(320, 180);
+	al_set_new_bitmap_flags(flags);
+}
 void Gamestate_Pause(struct Game *game, struct WalkResources* data) {}
 void Gamestate_Resume(struct Game *game, struct WalkResources* data) {}
