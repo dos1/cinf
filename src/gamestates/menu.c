@@ -339,6 +339,9 @@ void Gamestate_Start(struct Game *game, struct MenuResources* data) {
 	data->option = 0;
 	data->blink = 0;
 	data->offset = 30;
+#ifdef ALLEGRO_ANDROID
+	game->data->touch = true;
+#endif
 }
 
 void Gamestate_Stop(struct Game *game, struct MenuResources* data) {
