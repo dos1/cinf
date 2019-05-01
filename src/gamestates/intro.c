@@ -20,69 +20,71 @@
  */
 
 #include "../common.h"
+#include <allegro5/allegro_primitives.h>
 #include <libsuperderpy.h>
 #include <math.h>
-#include <allegro5/allegro_primitives.h>
-#include "intro.h"
+
+struct GamestateResources {
+	// This struct is for every resource allocated and used by your gamestate.
+	// It gets created on load and then gets passed around to all other function calls.
+	ALLEGRO_FONT* font;
+	struct Timeline* timeline;
+	ALLEGRO_SAMPLE* sample;
+	ALLEGRO_SAMPLE_INSTANCE* andnow;
+};
 
 int Gamestate_ProgressCount = 3; // number of loading steps as reported by Gamestate_Load
 
-bool Switch(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
-	if (state == TM_ACTIONSTATE_START) {
+static TM_ACTION(Switch) {
+	if (action->state == TM_ACTIONSTATE_START) {
 		SwitchCurrentGamestate(game, "walk");
 	}
 	return true;
 }
 
-bool PlayMusic(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
-	if (state == TM_ACTIONSTATE_START) {
+static TM_ACTION(PlayMusic) {
+	if (action->state == TM_ACTIONSTATE_START) {
 		al_set_audio_stream_playing(game->data->music, true);
 	}
 	return true;
 }
 
-bool PlaySound(struct Game *game, struct TM_Action *action, enum TM_ActionState state) {
-	struct IntroResources *data = TM_GetArg(action->arguments, 0);
-	if (state == TM_ACTIONSTATE_START) {
+static TM_ACTION(PlaySound) {
+	if (action->state == TM_ACTIONSTATE_START) {
 		al_play_sample_instance(data->andnow);
 	}
 	return true;
 }
 
-void Gamestate_Logic(struct Game *game, struct IntroResources* data) {
+void Gamestate_Logic(struct Game* game, struct GamestateResources* data, double delta) {
 	// Called 60 times per second. Here you should do all your game logic.
-	TM_Process(data->timeline);
+	TM_Process(data->timeline, delta);
 }
 
-void Gamestate_Draw(struct Game *game, struct IntroResources* data) {
+void Gamestate_Draw(struct Game* game, struct GamestateResources* data) {
 	// Called as soon as possible, but no sooner than next Gamestate_Logic call.
 	// Draw everything to the screen here.
-
-	al_set_target_backbuffer(game->display);
-	al_clear_to_color(al_map_rgb(0,0,0));
-
-	al_draw_text(data->font, al_map_rgb(255,255,255), 15, 180-40, ALLEGRO_ALIGN_LEFT, "Slavic Game Jam");
-	al_draw_text(data->font, al_map_rgb(255,255,255), 15, 180-30, ALLEGRO_ALIGN_LEFT, "CZIITT, Warsaw, Poland");
-	al_draw_text(data->font, al_map_rgb(255,255,255), 15, 180-20, ALLEGRO_ALIGN_LEFT, "August 7, 2016");
+	al_draw_text(data->font, al_map_rgb(255, 255, 255), 15, 180 - 40, ALLEGRO_ALIGN_LEFT, "Slavic Game Jam");
+	al_draw_text(data->font, al_map_rgb(255, 255, 255), 15, 180 - 30, ALLEGRO_ALIGN_LEFT, "CZIITT, Warsaw, Poland");
+	al_draw_text(data->font, al_map_rgb(255, 255, 255), 15, 180 - 20, ALLEGRO_ALIGN_LEFT, "August 7, 2016");
 }
 
-void Gamestate_ProcessEvent(struct Game *game, struct IntroResources* data, ALLEGRO_EVENT *ev) {
+void Gamestate_ProcessEvent(struct Game* game, struct GamestateResources* data, ALLEGRO_EVENT* ev) {
 	// Called for each event in Allegro event queue.
 	// Here you can handle user input, expiring timers etc.
-	TM_HandleEvent(data->timeline, ev);
-	if ((ev->type==ALLEGRO_EVENT_KEY_DOWN) && (ev->keyboard.keycode == ALLEGRO_KEY_ESCAPE)) {
+	if ((ev->type == ALLEGRO_EVENT_KEY_DOWN) && (ev->keyboard.keycode == ALLEGRO_KEY_ESCAPE)) {
 		SwitchCurrentGamestate(game, "walk");
 	}
 }
 
-void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
+void* Gamestate_Load(struct Game* game, void (*progress)(struct Game*)) {
 	// Called once, when the gamestate library is being loaded.
 	// Good place for allocating memory, loading bitmaps etc.
-	struct IntroResources *data = malloc(sizeof(struct IntroResources));
+	struct GamestateResources* data = malloc(sizeof(struct GamestateResources));
 	data->font = al_create_builtin_font();
 	progress(game); // report that we progressed with the loading, so the engine can draw a progress bar
 
-	data->timeline = TM_Init(game, "timeline");
+	data->timeline = TM_Init(game, data, "timeline");
 
 	if (!game->data->music) {
 		game->data->music = al_load_audio_stream(GetDataFilePath(game, "music.flac"), 4, 1024);
@@ -106,7 +108,7 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	return data;
 }
 
-void Gamestate_Unload(struct Game *game, struct IntroResources* data) {
+void Gamestate_Unload(struct Game* game, struct GamestateResources* data) {
 	// Called when the gamestate library is being unloaded.
 	// Good place for freeing all allocated memory and resources.
 	al_destroy_font(data->font);
@@ -116,28 +118,28 @@ void Gamestate_Unload(struct Game *game, struct IntroResources* data) {
 	free(data);
 }
 
-void Gamestate_Start(struct Game *game, struct IntroResources* data) {
+void Gamestate_Start(struct Game* game, struct GamestateResources* data) {
 	// Called when this gamestate gets control. Good place for initializing state,
 	// playing music etc.
-	TM_AddDelay(data->timeline, 1400);
-	TM_AddAction(data->timeline, PlayMusic, NULL, "playmusic");
-	TM_AddDelay(data->timeline, 1000);
-	TM_AddAction(data->timeline, PlaySound, TM_AddToArgs(NULL, 1, data), "playsound");
-	TM_AddDelay(data->timeline, 1600);
-	TM_AddAction(data->timeline, Switch, NULL, "switch");
+	TM_AddDelay(data->timeline, 1.4);
+	TM_AddAction(data->timeline, PlayMusic, NULL);
+	TM_AddDelay(data->timeline, 1);
+	TM_AddAction(data->timeline, PlaySound, NULL);
+	TM_AddDelay(data->timeline, 1.6);
+	TM_AddAction(data->timeline, Switch, NULL);
 	if (al_get_audio_stream_playing(game->data->music)) {
 		al_set_audio_stream_playing(game->data->music, false);
 		al_rewind_audio_stream(game->data->music);
 	}
 }
 
-void Gamestate_Stop(struct Game *game, struct IntroResources* data) {
+void Gamestate_Stop(struct Game* game, struct GamestateResources* data) {
 	// Called when gamestate gets stopped. Stop timers, music etc. here.
 	al_stop_sample_instance(data->andnow);
 }
 
 // Ignore those for now.
 // TODO: Check, comment, refine and/or remove:
-void Gamestate_Reload(struct Game *game, struct IntroResources* data) {}
-void Gamestate_Pause(struct Game *game, struct IntroResources* data) {}
-void Gamestate_Resume(struct Game *game, struct IntroResources* data) {}
+void Gamestate_Reload(struct Game* game, struct GamestateResources* data) {}
+void Gamestate_Pause(struct Game* game, struct GamestateResources* data) {}
+void Gamestate_Resume(struct Game* game, struct GamestateResources* data) {}

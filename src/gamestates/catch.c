@@ -20,17 +20,33 @@
  */
 
 #include "../common.h"
+#include <allegro5/allegro_primitives.h>
 #include <libsuperderpy.h>
 #include <math.h>
-#include <allegro5/allegro_primitives.h>
-#include "catch.h"
 
-int Gamestate_ProgressCount = 7; // number of loading steps as reported by Gamestate_Load
+struct GamestateResources {
+	// This struct is for every resource allocated and used by your gamestate.
+	// It gets created on load and then gets passed around to all other function calls.
+	ALLEGRO_FONT* font;
+	struct Character *bg, *hand, *glow, *key;
+	ALLEGRO_BITMAP* dell[6];
+	int pos;
+	char ch;
+	ALLEGRO_SAMPLE* sample;
+	ALLEGRO_SAMPLE_INSTANCE* sound;
 
-void Gamestate_Logic(struct Game *game, struct CatchResources* data) {
+	int keyposx, keyposy;
+};
+
+int Gamestate_ProgressCount = 11; // number of loading steps as reported by Gamestate_Load
+
+void Gamestate_Logic(struct Game* game, struct GamestateResources* data, double delta) {}
+
+void Gamestate_Tick(struct Game* game, struct GamestateResources* data) {
 	// Called 60 times per second. Here you should do all your game logic.
-	AnimateCharacter(game, data->bg, 1);
-	AnimateCharacter(game, data->glow, 1);
+	double delta = 1 / 60.0;
+	AnimateCharacter(game, data->bg, delta, 1);
+	AnimateCharacter(game, data->glow, delta, 1);
 	data->pos++;
 	if (data->pos % 64 == 0) {
 		al_stop_sample_instance(data->sound);
@@ -47,7 +63,7 @@ void Gamestate_Logic(struct Game *game, struct CatchResources* data) {
 	}
 
 	if (game->data->touch) {
-		SetCharacterPosition(game, data->glow, data->keyposx-139, 0, 0);
+		SetCharacterPosition(game, data->glow, data->keyposx - 139, 0, 0);
 		SetCharacterPosition(game, data->key, data->keyposx, 136, 0);
 	} else {
 		SetCharacterPosition(game, data->glow, 0, 0, 0);
@@ -55,29 +71,41 @@ void Gamestate_Logic(struct Game *game, struct CatchResources* data) {
 	}
 }
 
-void Gamestate_Draw(struct Game *game, struct CatchResources* data) {
+void Gamestate_Draw(struct Game* game, struct GamestateResources* data) {
 	// Called as soon as possible, but no sooner than next Gamestate_Logic call.
 	// Draw everything to the screen here.
 
-	al_set_target_backbuffer(game->display);
-	DrawCharacter(game, data->bg, al_map_rgb(255,255,255), 0);
+	DrawCharacter(game, data->bg);
 
 	int i = data->pos / 64 + 1;
 	float remainder = (data->pos / 64.0) - (i - 1);
-	al_draw_tinted_bitmap(data->dell[i-1], al_map_rgba_f(1.0-remainder,1.0-remainder,1.0-remainder,1.0-remainder), 0, 0, 0);
+	al_draw_tinted_bitmap(data->dell[i - 1], al_map_rgba_f(1.0 - remainder, 1.0 - remainder, 1.0 - remainder, 1.0 - remainder), 0, 0, 0);
 	al_draw_bitmap(data->dell[i], 0, 0, 0);
 
-	DrawCharacter(game, data->hand, al_map_rgb(255,255,255), 0);
+	DrawCharacter(game, data->hand);
 
-	DrawCharacter(game, data->glow, al_map_rgb(255,255,255), 0);
-	DrawCharacter(game, data->glow, al_map_rgb(255,255,255), 0);
-	DrawCharacter(game, data->key, al_map_rgb(255,255,255), 0);
+	DrawCharacter(game, data->glow);
+	DrawCharacter(game, data->glow);
+	DrawCharacter(game, data->key);
+
+#ifndef ALLEGRO_ANDROID
+	char text[2];
+	text[0] = data->ch + 'A' - 'a';
+	text[1] = 0;
+#else
+	char text[] = "!";
+#endif
+
+	if (strcmp(data->key->spritesheet->name, "ready") != 0) {
+		al_draw_text(data->font, al_map_rgb(0, 0, 0), GetCharacterX(game, data->key) + 19, GetCharacterY(game, data->key) + 15, ALLEGRO_ALIGN_LEFT, text);
+	} else {
+		al_draw_text(data->font, al_map_rgb(0, 0, 0), GetCharacterX(game, data->key) + 17, GetCharacterY(game, data->key) + 13, ALLEGRO_ALIGN_LEFT, text);
+	}
 
 	//al_draw_filled_rectangle(0, 0, data->pos + 30, 180, al_map_rgba(128,128,128,128));
-
 }
 
-void MoveHand(struct Game *game, struct CatchResources* data) {
+void MoveHand(struct Game* game, struct GamestateResources* data) {
 	al_stop_sample_instance(game->data->button);
 	al_play_sample_instance(game->data->button);
 	MoveCharacter(game, data->hand, 9, 0, 0);
@@ -87,18 +115,18 @@ void MoveHand(struct Game *game, struct CatchResources* data) {
 	SelectSpritesheet(game, data->key, "pressed");
 }
 
-void Gamestate_ProcessEvent(struct Game *game, struct CatchResources* data, ALLEGRO_EVENT *ev) {
+void Gamestate_ProcessEvent(struct Game* game, struct GamestateResources* data, ALLEGRO_EVENT* ev) {
 	// Called for each event in Allegro event queue.
 	// Here you can handle user input, expiring timers etc.
-	if ((ev->type==ALLEGRO_EVENT_KEY_DOWN) && (ev->keyboard.keycode == ALLEGRO_KEY_ESCAPE)) {
+	if ((ev->type == ALLEGRO_EVENT_KEY_DOWN) && (ev->keyboard.keycode == ALLEGRO_KEY_ESCAPE)) {
 		SwitchCurrentGamestate(game, "logo"); // mark this gamestate to be stopped and unloaded
 		// When there are no active gamestates, the engine will quit.
 	}
-	if ((ev->type==ALLEGRO_EVENT_KEY_DOWN) && (ev->keyboard.keycode == ALLEGRO_KEY_BACK)) {
+	if ((ev->type == ALLEGRO_EVENT_KEY_DOWN) && (ev->keyboard.keycode == ALLEGRO_KEY_BACK)) {
 		SwitchCurrentGamestate(game, "logo");
 		// When there are no active gamestates, the engine will quit.
 	}
-	if (ev->type==ALLEGRO_EVENT_KEY_DOWN) {
+	if (ev->type == ALLEGRO_EVENT_KEY_DOWN) {
 		const char* keyname = al_keycode_to_name(ev->keyboard.keycode);
 		PrintConsole(game, "Pressed: %s", keyname);
 		if ((keyname[0] == data->ch) || (keyname[0] == data->ch + 'A' - 'a')) {
@@ -106,71 +134,56 @@ void Gamestate_ProcessEvent(struct Game *game, struct CatchResources* data, ALLE
 		}
 		//PrintConsole(game, "%s", al_keycode_to_name(ev->keyboard.keycode));
 	}
-	if (ev->type==ALLEGRO_EVENT_KEY_UP) {
+	if (ev->type == ALLEGRO_EVENT_KEY_UP) {
 		const char* keyname = al_keycode_to_name(ev->keyboard.keycode);
 		if (keyname[0] == data->ch) {
 			SelectSpritesheet(game, data->key, "ready");
 		}
 	}
-	if (ev->type==ALLEGRO_EVENT_TOUCH_BEGIN) {
+	if (ev->type == ALLEGRO_EVENT_TOUCH_BEGIN) {
 		if (ev->touch.primary) {
 			int x = ev->touch.x, y = ev->touch.y;
 			WindowCoordsToViewport(game, &x, &y);
-			if (IsOnCharacter(game, data->key, x, y)) {
+			if (IsOnCharacter(game, data->key, x, y, false)) {
 				MoveHand(game, data);
 			}
 		}
 	}
-	if ((ev->type==ALLEGRO_EVENT_TOUCH_CANCEL) || (ev->type==ALLEGRO_EVENT_TOUCH_END)) {
+	if ((ev->type == ALLEGRO_EVENT_TOUCH_CANCEL) || (ev->type == ALLEGRO_EVENT_TOUCH_END)) {
 		SelectSpritesheet(game, data->key, "ready");
 	}
 }
 
-void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
+void* Gamestate_Load(struct Game* game, void (*progress)(struct Game*)) {
 	// Called once, when the gamestate library is being loaded.
 	// Good place for allocating memory, loading bitmaps etc.
-	struct CatchResources *data = malloc(sizeof(struct CatchResources));
+	struct GamestateResources* data = malloc(sizeof(struct GamestateResources));
 	data->font = al_create_builtin_font();
 	progress(game); // report that we progressed with the loading, so the engine can draw a progress bar
 	data->bg = CreateCharacter(game, "bg");
 	RegisterSpritesheet(game, data->bg, "bg");
-	LoadSpritesheets(game, data->bg);
+	LoadSpritesheets(game, data->bg, progress);
 	progress(game);
 
 	data->hand = CreateCharacter(game, "hand");
 	RegisterSpritesheet(game, data->hand, "hand");
-	LoadSpritesheets(game, data->hand);
+	LoadSpritesheets(game, data->hand, progress);
 	progress(game);
 
 	data->glow = CreateCharacter(game, "glow");
 	RegisterSpritesheet(game, data->glow, "glow");
-	LoadSpritesheets(game, data->glow);
+	LoadSpritesheets(game, data->glow, progress);
 	progress(game);
 
 	data->key = CreateCharacter(game, "key");
 	RegisterSpritesheet(game, data->key, "ready");
 	RegisterSpritesheet(game, data->key, "pressed");
-	LoadSpritesheets(game, data->key);
+	LoadSpritesheets(game, data->key, progress);
 	progress(game);
 
-	data->ch = 'a' + (rand() % ('z'-'a'));
-
-#ifndef ALLEGRO_ANDROID
-	char text[2];
-	text[0] = data->ch + 'A'-'a';
-	text[1] = 0;
-#else
-	char text[] = "!";
-#endif
-
+	data->ch = 'a' + (rand() % ('z' - 'a'));
 	data->keyposx = rand() % (game->viewport.width - al_get_bitmap_width(data->key->spritesheets->bitmap));
-	data->keyposy = game->viewport.height/2 + rand() % (game->viewport.height/2 - al_get_bitmap_height(data->key->spritesheets->bitmap));
-
-	al_set_target_bitmap(data->key->spritesheets->bitmap);
-	al_draw_text(data->font, al_map_rgb(0,0,0), 19, 15, ALLEGRO_ALIGN_LEFT, text);
-	al_set_target_bitmap(data->key->spritesheets->next->bitmap);
-	al_draw_text(data->font, al_map_rgb(0,0,0), 17, 13, ALLEGRO_ALIGN_LEFT, text);
-	progress(game);
+	data->keyposy = game->viewport.height / 2 + rand() % (game->viewport.height / 2 - al_get_bitmap_height(data->key->spritesheets->bitmap));
 
 	data->dell[0] = al_load_bitmap(GetDataFilePath(game, "dell0.png"));
 	data->dell[1] = al_load_bitmap(GetDataFilePath(game, "dell1.png"));
@@ -187,7 +200,7 @@ void* Gamestate_Load(struct Game *game, void (*progress)(struct Game*)) {
 	return data;
 }
 
-void Gamestate_Unload(struct Game *game, struct CatchResources* data) {
+void Gamestate_Unload(struct Game* game, struct GamestateResources* data) {
 	// Called when the gamestate library is being unloaded.
 	// Good place for freeing all allocated memory and resources.
 	al_destroy_font(data->font);
@@ -195,7 +208,7 @@ void Gamestate_Unload(struct Game *game, struct CatchResources* data) {
 	DestroyCharacter(game, data->hand);
 	DestroyCharacter(game, data->glow);
 	DestroyCharacter(game, data->key);
-	for (int i=0; i < 6; i++) {
+	for (int i = 0; i < 6; i++) {
 		al_destroy_bitmap(data->dell[i]);
 	}
 	al_destroy_sample_instance(data->sound);
@@ -203,7 +216,7 @@ void Gamestate_Unload(struct Game *game, struct CatchResources* data) {
 	free(data);
 }
 
-void Gamestate_Start(struct Game *game, struct CatchResources* data) {
+void Gamestate_Start(struct Game* game, struct GamestateResources* data) {
 	// Called when this gamestate gets control. Good place for initializing state,
 	// playing music etc.
 	SelectSpritesheet(game, data->bg, "bg");
@@ -213,7 +226,7 @@ void Gamestate_Start(struct Game *game, struct CatchResources* data) {
 	SelectSpritesheet(game, data->glow, "glow");
 	SelectSpritesheet(game, data->key, "ready");
 	if (game->data->touch) {
-		SetCharacterPosition(game, data->glow, data->keyposx-139, 0, 0);
+		SetCharacterPosition(game, data->glow, data->keyposx - 139, 0, 0);
 		SetCharacterPosition(game, data->key, data->keyposx, 136, 0);
 	} else {
 		SetCharacterPosition(game, data->glow, 0, 0, 0);
@@ -223,12 +236,12 @@ void Gamestate_Start(struct Game *game, struct CatchResources* data) {
 	data->pos = 0;
 }
 
-void Gamestate_Stop(struct Game *game, struct CatchResources* data) {
+void Gamestate_Stop(struct Game* game, struct GamestateResources* data) {
 	// Called when gamestate gets stopped. Stop timers, music etc. here.
 }
 
 // Ignore those for now.
 // TODO: Check, comment, refine and/or remove:
-void Gamestate_Reload(struct Game *game, struct CatchResources* data) {}
-void Gamestate_Pause(struct Game *game, struct CatchResources* data) {}
-void Gamestate_Resume(struct Game *game, struct CatchResources* data) {}
+void Gamestate_Reload(struct Game* game, struct GamestateResources* data) {}
+void Gamestate_Pause(struct Game* game, struct GamestateResources* data) {}
+void Gamestate_Resume(struct Game* game, struct GamestateResources* data) {}

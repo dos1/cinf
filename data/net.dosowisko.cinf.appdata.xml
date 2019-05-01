@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2019 Sebastian Krzyszkowiak <dos@dosowisko.net> -->
+<component type="desktop-application">
+  <id>net.dosowisko.cinf</id>
+  <metadata_license>FSFAP</metadata_license>
+  <project_license>GPL-3.0+</project_license>
+  <name>Computer Is (Not) Fine</name>
+  <summary>Ensure that the computer is fine!</summary>
+
+  <description>
+    <p>
+      Ensure that the computer is fine!
+
+      Based on a real events from Slavic Game Jam 2016.
+    </p>
+  </description>
+
+  <launchable type="desktop-id">cinf.desktop</launchable>
+
+  <developer_name>dosowisko.net</developer_name>
+
+  <update_contact>dos_AT_dosowisko.net</update_contact>
+
+  <provides>
+    <binary>cinf</binary>
+  </provides>
+
+</component>

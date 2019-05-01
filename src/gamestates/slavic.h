@@ -18,10 +18,3 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
  */
-
-struct SlavicResources {
-		ALLEGRO_BITMAP *slavic;
-		struct Timeline *timeline;
-		ALLEGRO_SAMPLE *sample;
-		ALLEGRO_SAMPLE_INSTANCE *sound;
-};

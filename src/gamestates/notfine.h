@@ -18,12 +18,3 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
  */
-
-struct NotFineResources {
-		// This struct is for every resource allocated and used by your gamestate.
-		// It gets created on load and then gets passed around to all other function calls.
-		ALLEGRO_FONT *font;
-		ALLEGRO_BITMAP *bitmap;
-		ALLEGRO_SAMPLE *sample;
-		ALLEGRO_SAMPLE_INSTANCE *boom;
-};

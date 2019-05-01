@@ -19,16 +19,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include <stdio.h>
-#include <signal.h>
 #include "common.h"
 #include <libsuperderpy.h>
+#include <signal.h>
+#include <stdio.h>
 
-struct CommonResources* CreateGameData(struct Game *game) {
+struct CommonResources* CreateGameData(struct Game* game) {
 	return calloc(1, sizeof(struct CommonResources));
 }
 
-bool GlobalEventHandler(struct Game *game, ALLEGRO_EVENT *event) {
+bool GlobalEventHandler(struct Game* game, ALLEGRO_EVENT* event) {
 	if (event->type == ALLEGRO_EVENT_TOUCH_BEGIN) {
 		game->data->touch = true;
 	}
@@ -40,14 +40,15 @@ bool GlobalEventHandler(struct Game *game, ALLEGRO_EVENT *event) {
 	return false;
 }
 
-void DestroyGameData(struct Game *game, struct CommonResources *resources) {
+void DestroyGameData(struct Game* game) {
+	struct CommonResources* resources = game->data;
 	if (resources->music) al_destroy_audio_stream(resources->music);
 	if (resources->button) al_destroy_sample_instance(resources->button);
 	if (resources->button_sample) al_destroy_sample(resources->button_sample);
 	free(resources);
 }
 
-void StartGame(struct Game *game, bool restart) {
+void StartGame(struct Game* game, bool restart) {
 	LoadGamestate(game, "intro");
 	LoadGamestate(game, "fall");
 	LoadGamestate(game, "catch");

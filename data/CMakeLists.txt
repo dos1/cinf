@@ -1,15 +1,2 @@
-SET(DATADIR "${SHARE_INSTALL_PREFIX}/${LIBSUPERDERPY_GAMENAME}/data")
+include(libsuperderpy-data)
 
-if(APPLE)
-  SET(DATADIR "${BIN_INSTALL_DIR}/${LIBSUPERDERPY_GAMENAME}.app/Contents/Resources/data") #OMG NASTY
-endif(APPLE)
-
-add_subdirectory(icons)
-if(UNIX AND NOT APPLE)
-  install(FILES ${LIBSUPERDERPY_GAMENAME}.desktop DESTINATION ${XDG_APPS_INSTALL_DIR})
-endif(UNIX AND NOT APPLE)
-
-install(DIRECTORY fonts DESTINATION ${DATADIR})
-install(DIRECTORY sprites DESTINATION ${DATADIR})
-file(GLOB DATAFILES "*.flac" "*.png")
-install(FILES ${DATAFILES} DESTINATION ${DATADIR})

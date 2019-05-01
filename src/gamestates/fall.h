@@ -18,11 +18,3 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
  */
-
-struct FallResources {
-		// This struct is for every resource allocated and used by your gamestate.
-		// It gets created on load and then gets passed around to all other function calls.
-		struct Character *maks;
-		ALLEGRO_SAMPLE *sample;
-		ALLEGRO_SAMPLE_INSTANCE *sound;
-};
